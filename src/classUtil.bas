@@ -86,6 +86,7 @@ End Sub
 Sub delModComponent(modn As String)
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
+        '   Debug.Print cmp.name
         If cmp.name = modn Then
             cmps.Remove cmp
             'MsgBox  "Delete Component " & modn
@@ -103,14 +104,24 @@ Sub delModComponentExcept(modns)
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
         modn = cmp.name
-        bol = False
+        Debug.Print modn
+        bol = True
+        If cmp.Type <> 1 And cmp.Type <> 2 Then bol = False
+        
         For Each elm In modns
-            If elm = modn Then bol = True
+            If elm = modn Then bol = False
         Next elm
-        If Not bol Then
+        If bol Then
             cmps.Remove cmp
             Debug.Print "Delete Component " & modn
-                   End If
+        End If
+    Next cmp
+End Sub
+
+Sub printModComponents()
+    Set cmps = Application.VBE.ActiveVBProject.VBComponents
+    For Each cmp In cmps
+    Debug.Print cmp.name
     Next cmp
 End Sub
 

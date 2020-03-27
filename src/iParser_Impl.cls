@@ -7,8 +7,6 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
-MultiUse = -1 'True
-End
 Private m_name As String 'g,l
 Private m_parsers As Collection 'go,s,i_
 
@@ -38,12 +36,13 @@ End Function
 Function match(somthing)
     If TypeName(something) = "String" Then
         Set state = Paresestate(something, 0)
-    End Function
+    End If
+End Function
 
-    Function init(ParamArray parsers())
-        Set m_parsers = New Collection
-        prm = parsers
-        For Each elm In prm
-            m_parsers.Add elm
-        Next
-    End Function
+Function init(ParamArray parsers())
+    Set m_parsers = New Collection
+    prm = parsers
+    For Each elm In prm
+        m_parsers.Add elm
+    Next
+End Function
