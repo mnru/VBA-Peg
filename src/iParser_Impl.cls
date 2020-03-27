@@ -7,6 +7,8 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
+MultiUse = -1 'True
+End
 Private m_name As String 'g,l
 Private m_parsers As Collection 'go,s,i_
 
@@ -18,31 +20,30 @@ Function or_(parser As iParser) As iParser
     Set and_ = Seq(Me, parer)
 End Function
 
-Function N0_() As iParser
-    Set N0_ = N0_(Me)
+Function r0() As iParser
+    Set r0 = Rep0orMore(Me)
 End Function
 
-Function N1_() As iParser
-    Set N1_ = N1_(Me)
+Function r1() As iParser
+    Set r1 = Rep1orMore(Me)
 End Function
 
-Function opt_() As iParser
-    Set opt_ = opt_(Me)
+Function r_() As iParser
+    Set r_ = Rep0or1(Me)
 End Function
 
 Function matchState(state As ParseState)
-
 End Function
 
 Function match(somthing)
+    If TypeName(something) = "String" Then
+        Set state = Paresestate(something, 0)
+    End Function
 
-End Function
-
-
-Function init(ParamArray parsers())
-    Set m_parsers = New Collection
-    prm = parsers
-    For Each elm In prm
-        m_parsers.Add elm
-    Next
-End Function
+    Function init(ParamArray parsers())
+        Set m_parsers = New Collection
+        prm = parsers
+        For Each elm In prm
+            m_parsers.Add elm
+        Next
+    End Function

@@ -69,6 +69,65 @@ Function getNoOptionLine(modn)
     getNoOptionLine = ret
 End Function
 
+Sub mkModComponent(modn As String, tp As String)
+    'tp mod,cls,frm
+    Set cmps = Application.VBE.ActiveVBProject.VBComponents
+    For Each cmp In cmps
+        If cmp.name = modn Then
+            'MsgBox  "Already Exists Component " & modn
+            Debug.Print "Already Exists Component " & modn
+            Exit Sub
+        End If
+    Next cmp
+    Set cmp0 = cmps.Add(typeNum(tp))
+    cmp0.name = modn
+End Sub
+
+Sub delModComponent(modn As String)
+    Set cmps = Application.VBE.ActiveVBProject.VBComponents
+    For Each cmp In cmps
+        If cmp.name = modn Then
+            cmps.Remove cmp
+            'MsgBox  "Delete Component " & modn
+            Debug.Print "Delete Component " & modn
+            bol = True
+            Exit Sub
+        End If
+    Next cmp
+    If Not bol Then
+        Debug.Print "Doesn't Exists Component " & modn
+    End If
+End Sub
+
+Sub delModComponentExcept(modns)
+    Set cmps = Application.VBE.ActiveVBProject.VBComponents
+    For Each cmp In cmps
+        modn = cmp.name
+        bol = False
+        For Each elm In modns
+            If elm = modn Then bol = True
+        Next elm
+        If Not bol Then
+            cmps.Remove cmp
+            Debug.Print "Delete Component " & modn
+                   End If
+    Next cmp
+End Sub
+
+Function typeNum(tp As String)
+    Dim ret
+    Select Case tp
+        Case "mod"
+            ret = 1
+        Case "cls"
+            ret = 2
+        Case "frm"
+            ret = 3
+        Case Else
+    End Select
+    typeNum = ret
+End Function
+
 Sub mkInterFace(ifcn As String, ParamArray ArgClsns())
     clsns = ArgClsns
     clsn = clsns(0)
@@ -125,8 +184,8 @@ End Sub
 Function getModProcs(modn As String)
     bn = ActiveWorkbook.name
     Dim procName
-    Dim procLineNum  As Long
-    Dim linecnt   As Long
+    Dim procLineNum As Long
+    Dim linecnt  As Long
     Dim fncDic
     Dim prpDic
     Set fncDic = CreateObject("Scripting.Dictionary")
@@ -183,11 +242,11 @@ Private Function defaultInterfaceName(clsn As String)
 End Function
 
 Function isLexicallyProc(sLine, pos, n)
-    Dim n0, c1, c2
+    Dim N0, c1, c2
     Dim ret
-    n0 = Len(sLine)
+    N0 = Len(sLine)
     ret = True
-    If pos + n > n0 Then ret = False
+    If pos + n > N0 Then ret = False
     If n > 1 Then
         c1 = Mid(lStr, n - 1, 1)
         If c1 <> " " And c1 <> "(" Then
@@ -195,7 +254,7 @@ Function isLexicallyProc(sLine, pos, n)
         End If
     End If
     pos2 = pos + n - 1
-    If pos2 < n0 Then
+    If pos2 < N0 Then
         c2 = Mid(lStr, pos2, 1)
         If c2 <> " " And c2 <> "," And c2 <> "(" And c2 <> ")" Then
             ret = False
@@ -303,6 +362,27 @@ Sub mkPrp(Optional ifcn As String = "")
                 End If
             Next j
 endfor:
+        Next i
+    End With
+End Sub
+
+Function mkConstructorStatement(clsn As String, Optional arg = "ParamArray arg()") As String
+    Dim ret(1 To 5)
+    ret(1) = "Function " & clsn & "(" & arg & " ) As " & clsn
+    ret(2) = "  Set " & clsn & " = New " & clsn
+    ret(3) = "  prm = arg"
+    ret(4) = "  " & clsn & ".init(prm)"
+    ret(5) = "End Function"
+    mkConstructorStatement = Join(ret, vbCrLf)
+End Function
+
+Sub mkCst(toMod As String, clsns() As String)
+    arg = clsns
+    Set cmp = Application.VBE.ActiveVBProject.VBComponents(toMod)
+    With cmp.CodeModule
+        For i = UBound(arg) To LBound(arg) Step -1
+            str0 = mkConstructorStatement(CStr(arg(i)))
+            .AddFromString (vbCrLf & str0)
         Next i
     End With
 End Sub
