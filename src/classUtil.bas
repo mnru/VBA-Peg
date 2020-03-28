@@ -130,7 +130,7 @@ End Sub
 Function typeNum(tp As String)
     Dim ret
     Select Case tp
-        Case "mod"
+        Case "std"
             ret = 1
         Case "cls"
             ret = 2
@@ -405,7 +405,7 @@ End Function
 
 Sub mkCst(toMod As String, clsns)
     arg = clsns
-    Set cmp = Application.VBE.ActiveVBProject.VBComponents(toMod)
+    Set cmp = mkModComponent(toMod, "std")
     With cmp.CodeModule
         For i = UBound(arg) To LBound(arg) Step -1
             str0 = mkConstructorStatement(CStr(arg(i)))
@@ -444,14 +444,15 @@ Sub mkInterFace(ifcn As String, impln As String, ParamArray ArgClsns())
     Call mkPrp(ifcn, impln, True, False)
 End Sub
 
-Sub mkSubClass(sclsn As String, ifcn As String, ParamArray ArgClsns())
-    clsns = ArgClsns
-    clsn = clsns(0)
-    If ifcn = "" Then ifcn = defaultInterfaceName(CStr(clsn))
-    Set cmps = ActiveWorkbook.VBProject.VBComponents
-    Set sCmp = cmps(clsn)
-    Set tCmp = cmps.Add(2)
-    tCmp.name = sclsn
-    Call cpCode(clsn, sclsn, "all")
-    fncs = getModProcs(ifcn)
+Sub mkSubClass(ifcn As String, impln As String, sclsns)
+    If ifcn = "" Then ifcn = defaultInterfaceName(CStr(impln))
+    Set cmps = Application.VBE.SelectedVBComponent
+    For Each sclsn In sclsns
+        Set tCmp = mkModComponent(CStr(sclsn), "cls")
+        Call cpCode(impln, sclsn, "all")
+        With tCmp.CodeModule
+            sLine = "implements " & ifcn
+            Call .InsertLines(1, sLine)
+        End With
+    Next sclsn
 End Sub

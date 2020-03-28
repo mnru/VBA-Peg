@@ -1,5 +1,6 @@
 Attribute VB_Name = "testCode"
-Sub test()
+
+Sub test0()
     strA = Join(Split("g,f,e,a,b", ","), vbCrLf)
     Call disposeProc("replace", "Logwriter", "myoutput", , strA)
 End Sub
@@ -50,3 +51,4 @@ Sub testPart()
     y = partSymbol(x)
     Stop
 End Sub
+

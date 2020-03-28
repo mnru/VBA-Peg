@@ -11,11 +11,11 @@ Private m_name As String 'i_,g,l
 Private m_parsers As Collection 'is,igo_,_go,s_
 
 Function and_(parser As iParser) As iParser
-    Set and_ = Seq(Me, parer)
+    Set and_ = Seq(Me, parser)
 End Function
 
 Function or_(parser As iParser) As iParser
-    Set and_ = Seq(Me, parer)
+    Set and_ = Seq(Me, parser)
 End Function
 
 Function r0() As iParser
