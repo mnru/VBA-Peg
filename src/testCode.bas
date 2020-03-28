@@ -1,5 +1,4 @@
 Attribute VB_Name = "testCode"
-
 Sub test0()
     strA = Join(Split("g,f,e,a,b", ","), vbCrLf)
     Call disposeProc("replace", "Logwriter", "myoutput", , strA)
@@ -44,11 +43,9 @@ Sub testDel()
     Call delModComponentExcept(clsns)
 End Sub
 '
-'"AnyChar","ASTNode","Char","CharRange","CharSet","Choice","classGenerator","classUtil","Delay","F","G","iParser","iParser_Impl","N1_","Opt","Parser_Impl","ParseState","RegEx","Rule","Seq","T","Token"
 
 Sub testPart()
     x = Split("i,j,k,gt,ilt")
     y = partSymbol(x)
     Stop
 End Sub
-

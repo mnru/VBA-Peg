@@ -8,7 +8,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Private m_name As String 'i_,g,l
-Private m_parsers As Collection 'is,igo_,_go,s_
+Private m_parsers As Collection 'is,igo_,go,s_
 
 Function and_(parser As iParser) As iParser
     Set and_ = Seq(Me, parser)
@@ -39,10 +39,11 @@ Function match(somthing)
     End If
 End Function
 
-Function init(ParamArray parsers())
+Function init(prm)
     Set m_parsers = New Collection
-    prm = parsers
     For Each elm In prm
-        m_parsers.Add elm
+        Dim x As iParser
+        Set x = elm
+        m_parsers.Add x
     Next
 End Function

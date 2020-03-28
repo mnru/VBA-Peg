@@ -73,10 +73,12 @@ Function getNoOptionLine(modn)
 End Function
 
 Function mkModComponent(modn As String, tp As String)
+    'get  module  of which name of "modn"  if exist,or create module of type "tp"
     'tp mod,cls,frm
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
-        If cmp.name = modn Then
+        Debug.Print cmp.name
+        If LCase(cmp.name) = LCase(modn) Then
             Debug.Print "Already Exists Component " & modn
             Set mkModComponent = cmp
             Exit Function
@@ -86,7 +88,30 @@ Function mkModComponent(modn As String, tp As String)
     mkModComponent.name = modn
 End Function
 
+Sub delProcs(Optional modn As String = "", Optional bolFnc = False, Optional bolPrP = False)
+    'delete procedures in module "modn"
+    If modn = "" Then modn = Application.VBE.SelectedVBComponent.name
+    
+    Set cmp = Application.VBE.ActiveVBProject.VBComponents(modn)
+    fncs = getModProcDics(modn)
+    With cmp.CodeModule
+        If bolFnc Then
+            For Each fnc In fncs(0).keys
+                Call .DeleteLines(.ProcStartLine(fnc, 0), .ProcCountLines(fnc, 0))
+            Next fnc
+        End If
+        If bolPrP Then
+            For Each prp In fncs(1).keys
+                For Each knd In fncs(1)(prp)
+                    Call .DeleteLines(.ProcStartLine(prp, knd), .ProcCountLines(prp, knd))
+                Next knd
+            Next prp
+        End If
+    End With
+End Sub
+
 Sub delModComponent(modn As String)
+    'delete module component
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
         '   Debug.Print cmp.name
@@ -142,7 +167,8 @@ Function typeNum(tp As String)
 End Function
 
 Sub cpCode(smodn, tmodn, Optional part = "all")
-    Set sCmp = ActiveWorkbook.VBProject.VBComponents(smodn)
+    Dim sCmp, tCmp
+    Set sCmp = Application.VBE.ActiveVBProject.VBComponents(smodn)
     With sCmp.CodeModule
         Select Case LCase(part)
             Case "all"
@@ -154,7 +180,7 @@ Sub cpCode(smodn, tmodn, Optional part = "all")
             Case Else
         End Select
     End With
-    Set tCmp = ActiveWorkbook.VBProject.VBComponents(tmodn)
+    Set tCmp = Application.VBE.ActiveVBProject.VBComponents(tmodn)
     If sCode <> "" Then
         tCmp.CodeModule.AddFromString sCode
     End If
@@ -162,7 +188,7 @@ Sub cpCode(smodn, tmodn, Optional part = "all")
     Set tCmp = Nothing
 End Sub
 
-Function getModProcs(modn As String)
+Function getModProcDics(modn As String)
     bn = ActiveWorkbook.name
     Dim cmp
     Dim procName
@@ -198,7 +224,7 @@ Function getModProcs(modn As String)
             Next linecnt
         End If
     End With
-    getModProcs = Array(fncDic, prpDic)
+    getModProcDics = Array(fncDic, prpDic)
     Set cmp = Nothing
 End Function
 
@@ -244,6 +270,35 @@ Function isLexicallyProc(sLine, pos, n)
     End If
     isLexicallyProc = ret
 End Function
+
+Sub addPrefix(ifsn, clsn)
+    fncs = getModProcDics(ifsn)
+    Dim sLine
+    Dim cmp As VBComponent
+    Set cmp = mkModComponent(clsn, "cls")
+    With cmp.CodeModule
+        For i = .CountOfDeclarationLines To .CountOfLines
+            tmp = .Lines(i, 1)
+            For j = 0 To 1
+                For Each s In fncs(j).keys
+                    n = Len(s)
+                    pos = Len(tmp)
+                    Do While pos > 0
+                        pos = InStrRev(tmp, s, pos)
+                        If isLexicallyProc(tmp, pos, n) Then
+                            If pos = 0 Then
+                                tmp = infsn & "_" & tmp
+                            Else
+                                tmp = Left(tmp, pos - 1) & infsn & "_" & Right(tmp, Len(tmp) - pos + 1)
+                            End If
+                        End If
+                    Loop
+                Next s
+            Next j
+        Next i
+        Call .ReplaceLine(i, tmp)
+    End With
+End Sub
 
 Function addIfcPreFix(sLine, ifc, pos)
     Dim ret
@@ -306,7 +361,7 @@ Function mkPrpStatement(x, tp, symbol)
     End If
 End Function
 
-Sub mkPrp(Optional ifcn As String = "", Optional impln As String = "", Optional mkI = False, Optional mkExceptI = True)
+Sub mkPrp(Optional ifcn As String = "", Optional impln As String = "", Optional mkI = False, Optional mkNotI = True)
     Dim cmp
     Dim sLine As String
     Dim i
@@ -338,11 +393,13 @@ Sub mkPrp(Optional ifcn As String = "", Optional impln As String = "", Optional 
                         Call cmp0.CodeModule.AddFromString(vbCrLf & sts(1))
                     Next j
                 End If
-                If mkExceptI Then
-                    For j = symbolExceptI.Count To 1 Step -1
-                        s = symbolExceptI(j)
-                        sts = mkPrpStatement(s2, s4, s)
-                        Call .InsertLines(.CountOfLines, vbCrLf & sts(1))
+                If mkNotI Then
+                    For j = symbolNotI.Count To 1 Step -1
+                        s = symbolNotI(j)
+                        s1 = aryDcl(1)
+                        s2 = aryDcl(2)
+                        sts = mkPrpStatement(s1, s2, s)
+                        Call .AddFromString(vbCrLf & sts(1))
                     Next j
                 End If
             End If
@@ -430,7 +487,7 @@ Sub mkInterFace(ifcn As String, impln As String, ParamArray ArgClsns())
     Set sCmp = cmps(impln)
     Set tCmp = mkModComponent(ifcn, "cls")
     ' Call cpCode(ifcn, impln, "all")
-    fncs = getModProcs(impln)
+    fncs = getModProcDics(impln)
     With tCmp.CodeModule
         fnckeys = fncs(0).keys
         For i = UBound(fnckeys) To LBound(fnckeys) Step -1
