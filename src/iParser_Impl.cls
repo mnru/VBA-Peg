@@ -15,7 +15,7 @@ Function and_(parser As iParser) As iParser
 End Function
 
 Function or_(parser As iParser) As iParser
-    Set and_ = Seq(Me, parser)
+    Set or_ = Choice(Me, parser)
 End Function
 
 Function r0() As iParser
