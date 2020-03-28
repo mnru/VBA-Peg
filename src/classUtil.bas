@@ -34,7 +34,10 @@ Function disposeProc(tp, cmpn, procName, Optional knd = 0, Optional sCode = "")
         lineContent = lineDef + defcnt
         If tp = "get" Then
             xdef = .Lines(lineDef, lineContent - lineDef)
-            xcnt = .Lines(lineContent, lineEnd - lineContent)
+            xcnt = ""
+            If lineEnd > lineContent Then
+                xcnt = .Lines(lineContent, lineEnd - lineContent)
+            End If
             xend = .Lines(lineEnd, 1)
             disposeProc = Array(xdef, xcnt, xend)
             Exit Function
@@ -69,19 +72,19 @@ Function getNoOptionLine(modn)
     getNoOptionLine = ret
 End Function
 
-Sub mkModComponent(modn As String, tp As String)
+Function mkModComponent(modn As String, tp As String)
     'tp mod,cls,frm
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
         If cmp.name = modn Then
-            'MsgBox  "Already Exists Component " & modn
             Debug.Print "Already Exists Component " & modn
-            Exit Sub
+            Set mkModComponent = cmp
+            Exit Function
         End If
     Next cmp
-    Set cmp0 = cmps.Add(typeNum(tp))
-    cmp0.name = modn
-End Sub
+    Set mkModComponent = cmps.Add(typeNum(tp))
+    mkModComponent.name = modn
+End Function
 
 Sub delModComponent(modn As String)
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
@@ -107,7 +110,6 @@ Sub delModComponentExcept(modns)
         Debug.Print modn
         bol = True
         If cmp.Type <> 1 And cmp.Type <> 2 Then bol = False
-        
         For Each elm In modns
             If elm = modn Then bol = False
         Next elm
@@ -121,7 +123,7 @@ End Sub
 Sub printModComponents()
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
-    Debug.Print cmp.name
+        Debug.Print cmp.name
     Next cmp
 End Sub
 
@@ -138,38 +140,6 @@ Function typeNum(tp As String)
     End Select
     typeNum = ret
 End Function
-
-Sub mkInterFace(ifcn As String, ParamArray ArgClsns())
-    clsns = ArgClsns
-    clsn = clsns(0)
-    If ifcn = "" Then ifcn = defaultInterfaceName(CStr(clsn))
-    Set cmps = ActiveWorkbook.VBProject.VBComponents
-    Set sCmp = cmps(clsn)
-    Set tCmp = cmps.Add(2)
-    tCmp.name = ifcn
-    Call cpCode(clsn, ifcn, "all")
-    fncs = getModProcs(ifcn)
-    For Each fnc In fncs(0).keys
-        Call disposeProc("del", ifcn, fnc)
-    Next
-    For Each prp In fncs(1).keys
-        For Each knd In fncs(1)(prp)
-            Call disposeProc("del", ifcn, prp, knd)
-        Next
-    Next
-End Sub
-
-Sub mkSubClass(sclsn As String, ifcn As String, ParamArray ArgClsns())
-    clsns = ArgClsns
-    clsn = clsns(0)
-    If ifcn = "" Then ifcn = defaultInterfaceName(CStr(clsn))
-    Set cmps = ActiveWorkbook.VBProject.VBComponents
-    Set sCmp = cmps(clsn)
-    Set tCmp = cmps.Add(2)
-    tCmp.name = sclsn
-    Call cpCode(clsn, sclsn, "all")
-    fncs = getModProcs(ifcn)
-End Sub
 
 Sub cpCode(smodn, tmodn, Optional part = "all")
     Set sCmp = ActiveWorkbook.VBProject.VBComponents(smodn)
@@ -194,6 +164,7 @@ End Sub
 
 Function getModProcs(modn As String)
     bn = ActiveWorkbook.name
+    Dim cmp
     Dim procName
     Dim procLineNum As Long
     Dim linecnt  As Long
@@ -213,7 +184,7 @@ Function getModProcs(modn As String)
                     If procLineNum <> 0 Then
                         Call fncDic.Add(procName, 0)
                     Else
-                        If Not prpDic.exists(procName) Then
+                        If Not prpDic.Exists(procName) Then
                             Call prpDic.Add(procName, New Collection)
                             For knd = 1 To 3
                                 procLineNum = tryToGetProcLineNum(cmp, procName, knd)
@@ -253,11 +224,11 @@ Private Function defaultInterfaceName(clsn As String)
 End Function
 
 Function isLexicallyProc(sLine, pos, n)
-    Dim N0, c1, c2
+    Dim n0, c1, c2
     Dim ret
-    N0 = Len(sLine)
+    n0 = Len(sLine)
     ret = True
-    If pos + n > N0 Then ret = False
+    If pos + n > n0 Then ret = False
     If n > 1 Then
         c1 = Mid(lStr, n - 1, 1)
         If c1 <> " " And c1 <> "(" Then
@@ -265,7 +236,7 @@ Function isLexicallyProc(sLine, pos, n)
         End If
     End If
     pos2 = pos + n - 1
-    If pos2 < N0 Then
+    If pos2 < n0 Then
         c2 = Mid(lStr, pos2, 1)
         If c2 <> " " And c2 <> "," And c2 <> "(" And c2 <> ")" Then
             ret = False
@@ -335,47 +306,92 @@ Function mkPrpStatement(x, tp, symbol)
     End If
 End Function
 
-Sub mkPrp(Optional ifcn As String = "")
+Sub mkPrp(Optional ifcn As String = "", Optional impln As String = "", Optional mkI = False, Optional mkExceptI = True)
     Dim cmp
-    Dim sLine
-    Dim i, n
-    Set cmp = Application.VBE.SelectedVBComponent
+    Dim sLine As String
+    Dim i
+    Dim aryLine, aryDcl, arySymbol
+    If impln = "" Then
+        Set cmp = Application.VBE.SelectedVBComponent
+    Else
+        Set cmp = Application.VBE.ActiveVBProject.VBComponents(impln)
+    End If
     Debug.Print cmp.name
     If ifcn = "" Then ifcn = defaultInterfaceName(cmp.name)
     With cmp.CodeModule
         For i = .CountOfDeclarationLines To 1 Step -1
             sLine = .Lines(i, 1)
-            n = InStr(sLine, "'")
-            If n = 0 Then GoTo endfor
-            ary1 = Split(Trim(Left(sLine, n - 1)))
-            ary2 = Split(Trim(Right(sLine, Len(sLine) - n)), ",")
-            If lenAry(ary1) <> 2 And lenAry(ary1) <> 4 Then GoTo endfor
-            If lenAry(ary1) = 4 And Trim(ary1(2)) <> "As" Then GoTo endfor
-            s1 = Trim(ary1(0))
-            s2 = Trim(ary1(1))
-            If s1 <> "Dim" And s1 = "Private" <> s1 = "Public" Then GoTo endfor
+            aryLine = Split(sLine, "'")
+            If lenAry(aryLine) <> 2 Then GoTo endfor
+            aryDcl = partDcl(aryLine(0))
+            If aryDcl(0) Then
+                arySymbol = partSymbol(aryLine(1))
+                Set symbolI = arySymbol(0)
+                Set symbolNotI = arySymbol(1)
+                If mkI Then
+                    Set cmp0 = mkModComponent(ifcn, "cls")
+                    For j = symbolI.Count To 1 Step -1
+                        s = symbolI(j)
+                        s1 = aryDcl(1)
+                        s2 = aryDcl(2)
+                        sts = mkPrpStatement(s1, s2, s)
+                        Call cmp0.CodeModule.AddFromString(vbCrLf & sts(1))
+                    Next j
+                End If
+                If mkExceptI Then
+                    For j = symbolExceptI.Count To 1 Step -1
+                        s = symbolExceptI(j)
+                        sts = mkPrpStatement(s2, s4, s)
+                        Call .InsertLines(.CountOfLines, vbCrLf & sts(1))
+                    Next j
+                End If
+            End If
+endfor:
+        Next i
+    End With
+End Sub
+
+Function partDcl(str)
+    bol = True
+    s2 = ""
+    s4 = ""
+    ary1 = Split(Trim(str))
+    If lenAry(ary1) <> 2 And lenAry(ary1) <> 4 Then bol = False
+    If lenAry(ary1) = 4 And Trim(ary1(2)) <> "As" Then bol = False
+    If bol Then
+        s1 = Trim(ary1(0))
+        s2 = Trim(ary1(1))
+        If s1 <> "Dim" And s1 = "Private" <> s1 = "Public" Then
+            bol = False
+        Else
             If lenAry(ary1) = 2 Then
                 s4 = ""
             Else
                 s4 = Trim(ary1(3))
             End If
             If Left(s2, 2) = "m_" Then s2 = Right(s2, Len(s2) - 2)
-            For j = UBound(ary2) To LBound(ary2) Step -1
-                s = Trim(ary2(j))
-                If s <> "" Then
-                    sts = mkPrpStatement(s2, s4, s)
-                    If Not sts(0) Then
-                        .AddFromString (vbCrLf & sts(1))
-                    Else
-                        Set cmp0 = Application.VBE.ActiveVBProject.VBComponents(ifcn)
-                        cmp0.CodeModule.AddFromString (vbCrLf & sts(1))
-                    End If
-                End If
-            Next j
-endfor:
-        Next i
-    End With
-End Sub
+        End If
+    End If
+    partDcl = Array(bol, s2, s4)
+End Function
+
+Function partSymbol(str)
+    Dim clc1, clc2, ary, elm
+    Set clc1 = New Collection
+    Set clc2 = New Collection
+    ary = Split(str, ",")
+    For Each elm In ary
+        elm = LCase(Trim(elm))
+        If elm <> "" Then
+            If Left(elm, 1) = "i" Then
+                clc1.Add elm
+            Else
+                clc2.Add elm
+            End If
+        End If
+    Next elm
+    partSymbol = Array(clc1, clc2)
+End Function
 
 Function mkConstructorStatement(clsn As String, Optional arg = "ParamArray arg()") As String
     Dim ret(1 To 5)
@@ -387,7 +403,7 @@ Function mkConstructorStatement(clsn As String, Optional arg = "ParamArray arg()
     mkConstructorStatement = Join(ret, vbCrLf)
 End Function
 
-Sub mkCst(toMod As String, clsns() As String)
+Sub mkCst(toMod As String, clsns)
     arg = clsns
     Set cmp = Application.VBE.ActiveVBProject.VBComponents(toMod)
     With cmp.CodeModule
@@ -396,4 +412,46 @@ Sub mkCst(toMod As String, clsns() As String)
             .AddFromString (vbCrLf & str0)
         Next i
     End With
+End Sub
+
+Sub mkInterFace(ifcn As String, impln As String, ParamArray ArgClsns())
+    Dim i
+    Dim clsns
+    Dim sCmp, tCmp
+    Dim fncs, fnckeys, fnc
+    clsns = ArgClsns
+    If impln = "" Then
+        Set cmp = Application.VBE.SelectedVBComponent
+    Else
+        Set cmp = Application.VBE.ActiveVBProject.VBComponents(impln)
+    End If
+    If ifcn = "" Then ifcn = defaultInterfaceName(CStr(impln))
+    Set cmps = ActiveWorkbook.VBProject.VBComponents
+    Set sCmp = cmps(impln)
+    Set tCmp = mkModComponent(ifcn, "cls")
+    ' Call cpCode(ifcn, impln, "all")
+    fncs = getModProcs(impln)
+    With tCmp.CodeModule
+        fnckeys = fncs(0).keys
+        For i = UBound(fnckeys) To LBound(fnckeys) Step -1
+            fnc = fnckeys(i)
+            codes = disposeProc("get", impln, fnc)
+            code = codes(0) & vbCrLf & codes(2)
+            Call .AddFromString(vbCrLf & code)
+            'Call .InsertLines(.CountOfLines, code)
+        Next i
+    End With
+    Call mkPrp(ifcn, impln, True, False)
+End Sub
+
+Sub mkSubClass(sclsn As String, ifcn As String, ParamArray ArgClsns())
+    clsns = ArgClsns
+    clsn = clsns(0)
+    If ifcn = "" Then ifcn = defaultInterfaceName(CStr(clsn))
+    Set cmps = ActiveWorkbook.VBProject.VBComponents
+    Set sCmp = cmps(clsn)
+    Set tCmp = cmps.Add(2)
+    tCmp.name = sclsn
+    Call cpCode(clsn, sclsn, "all")
+    fncs = getModProcs(ifcn)
 End Sub
