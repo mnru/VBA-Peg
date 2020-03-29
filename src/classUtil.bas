@@ -91,7 +91,6 @@ End Function
 Sub delProcs(Optional modn As String = "", Optional bolFnc = False, Optional bolPrP = False)
     'delete procedures in module "modn"
     If modn = "" Then modn = Application.VBE.SelectedVBComponent.name
-    
     Set cmp = Application.VBE.ActiveVBProject.VBComponents(modn)
     fncs = getModProcDics(modn)
     With cmp.CodeModule
@@ -249,29 +248,52 @@ Private Function defaultInterfaceName(clsn As String)
     defaultInterfaceName = ifc
 End Function
 
-Function isLexicallyProc(sLine, pos, n)
+Function isProc(sLine, pos, n)
     Dim n0, c1, c2
     Dim ret
     n0 = Len(sLine)
     ret = True
-    If pos + n > n0 Then ret = False
-    If n > 1 Then
-        c1 = Mid(lStr, n - 1, 1)
+    pos2 = pos + n - 1
+    If pos <= 0 Or pos2 > n0 Then ret = False
+    If pos > 1 Then
+        c1 = Mid(sLine, pos - 1, 1)
         If c1 <> " " And c1 <> "(" Then
             ret = False
         End If
     End If
-    pos2 = pos + n - 1
     If pos2 < n0 Then
-        c2 = Mid(lStr, pos2, 1)
+        c2 = Mid(sLine, pos2 + 1, 1)
         If c2 <> " " And c2 <> "," And c2 <> "(" And c2 <> ")" Then
             ret = False
         End If
     End If
-    isLexicallyProc = ret
+    isProc = ret
 End Function
 
-Sub addPrefix(ifsn, clsn)
+Function isPrefix(sLine, pos, n)
+    Dim n0, c1, c2
+    Dim ret
+    n0 = Len(sLine)
+    ret = True
+    pos2 = pos + n - 1
+    If pos <= 0 Or pos2 > n0 Then ret = False
+    If pos > 1 Then
+        c1 = Mid(sLine, pos - 1, 1)
+        If c1 <> " " And c1 <> "(" Then
+            ret = False
+        End If
+    End If
+    If pos2 < n0 Then
+        c2 = Mid(sLine, pos2 + 1, 1)
+        If c2 <> "_" Then
+            ret = False
+        End If
+    End If
+    isPrefix = ret
+End Function
+
+Sub addPrefix(ifsn As String, clsn As String)
+    Dim tmp
     fncs = getModProcDics(ifsn)
     Dim sLine
     Dim cmp As VBComponent
@@ -285,18 +307,53 @@ Sub addPrefix(ifsn, clsn)
                     pos = Len(tmp)
                     Do While pos > 0
                         pos = InStrRev(tmp, s, pos)
-                        If isLexicallyProc(tmp, pos, n) Then
-                            If pos = 0 Then
-                                tmp = infsn & "_" & tmp
-                            Else
-                                tmp = Left(tmp, pos - 1) & infsn & "_" & Right(tmp, Len(tmp) - pos + 1)
+                        If pos > 0 Then
+                            If isProc(tmp, pos, n) Then
+                                If pos = 1 Then
+                                    tmp = ifsn & "_" & tmp
+                                Else
+                                    tmp = Left(tmp, pos - 1) & ifsn & "_" & Right(tmp, Len(tmp) - pos + 1)
+                                End If
                             End If
                         End If
+                        pos = pos - 1
                     Loop
                 Next s
             Next j
+            If .Lines(i, 1) <> tmp Then Call .ReplaceLine(i, tmp)
         Next i
-        Call .ReplaceLine(i, tmp)
+    End With
+End Sub
+
+Sub delPrefix(ifsn As String, clsn As String)
+    Dim tmp, t1, t2
+    fncs = getModProcDics(ifsn)
+    Dim sLine
+    Dim cmp As VBComponent
+    Set cmp = mkModComponent(clsn, "cls")
+    With cmp.CodeModule
+        For i = .CountOfDeclarationLines To .CountOfLines
+            tmp = .Lines(i, 1)
+            For j = 0 To 1
+                For Each s In fncs(j).keys
+                    n = Len(ifsn)
+                    pos = Len(tmp)
+                    Do While pos > 0
+                        pos = InStrRev(tmp, ifsn, pos)
+                        If pos > 0 Then
+                            If isPrefix(tmp, pos, n) Then
+                                t1 = ""
+                                If pos > 0 Then t1 = Left(tmp, pos - 1)
+                                If Len(tmp) - (pos + n) - 1 > 0 Then t2 = Right(tmp, Len(tmp) - (pos + n) - 1)
+                                tmp = t1 & t2
+                            End If
+                        End If
+                        pos = pos - 1
+                    Loop
+                Next s
+            Next j
+            If .Lines(i, 1) <> tmp Then Call .ReplaceLine(i, tmp)
+        Next i
     End With
 End Sub
 
