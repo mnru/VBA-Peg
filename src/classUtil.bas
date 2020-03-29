@@ -77,7 +77,7 @@ Function mkModComponent(modn As String, tp As String)
     'tp mod,cls,frm
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
-        Debug.Print cmp.name
+    '    Debug.Print cmp.name
         If LCase(cmp.name) = LCase(modn) Then
             Debug.Print "Already Exists Component " & modn
             Set mkModComponent = cmp
@@ -296,7 +296,7 @@ Sub addPrefix(ifsn As String, clsn As String)
     Dim tmp
     fncs = getModProcDics(ifsn)
     Dim sLine
-    Dim cmp As VBComponent
+    Dim cmp 'As VBComponent
     Set cmp = mkModComponent(clsn, "cls")
     With cmp.CodeModule
         For i = .CountOfDeclarationLines To .CountOfLines
@@ -329,7 +329,7 @@ Sub delPrefix(ifsn As String, clsn As String)
     Dim tmp, t1, t2
     fncs = getModProcDics(ifsn)
     Dim sLine
-    Dim cmp As VBComponent
+    Dim cmp 'As VBComponent
     Set cmp = mkModComponent(clsn, "cls")
     With cmp.CodeModule
         For i = .CountOfDeclarationLines To .CountOfLines
@@ -344,7 +344,7 @@ Sub delPrefix(ifsn As String, clsn As String)
                             If isPrefix(tmp, pos, n) Then
                                 t1 = ""
                                 If pos > 0 Then t1 = Left(tmp, pos - 1)
-                                If Len(tmp) - (pos + n) - 1 > 0 Then t2 = Right(tmp, Len(tmp) - (pos + n) - 1)
+                                If Len(tmp) - (pos + n) > 0 Then t2 = Right(tmp, Len(tmp) - (pos + n))
                                 tmp = t1 & t2
                             End If
                         End If
