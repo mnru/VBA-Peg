@@ -1,7 +1,7 @@
 Attribute VB_Name = "classUtil"
 Option Base 0
 
-Function disposeProc(tp, cmpn, procName, Optional knd = 0, Optional sCode = "")
+Function disposeProc(tp, modn, procName, Optional knd = 0, Optional sCode = "")
     'tp "get","del","replace"
     Dim cmp
     Dim lineStart, lineDef, lineContent, lineEnd, defcnt, linecnt, i
@@ -9,7 +9,7 @@ Function disposeProc(tp, cmpn, procName, Optional knd = 0, Optional sCode = "")
     disposeProc = ""
     tp = LCase(tp)
     If tp = "del" Then sCode = ""
-    Set cmp = ActiveWorkbook.VBProject.VBComponents(cmpn)
+    Set cmp = Application.VBE.ActiveVBProject.VBComponents(modn)
     With cmp.CodeModule
         linecnt = .ProcCountLines(procName, knd)
         lineStart = .ProcStartLine(procName, knd)
@@ -77,7 +77,7 @@ Function mkModComponent(modn As String, tp As String)
     'tp mod,cls,frm
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
-    '    Debug.Print cmp.name
+        '    Debug.Print cmp.name
         If LCase(cmp.name) = LCase(modn) Then
             Debug.Print "Already Exists Component " & modn
             Set mkModComponent = cmp
@@ -188,7 +188,6 @@ Sub cpCode(smodn, tmodn, Optional part = "all")
 End Sub
 
 Function getModProcDics(modn As String)
-    bn = ActiveWorkbook.name
     Dim cmp
     Dim procName
     Dim procLineNum As Long
@@ -198,7 +197,7 @@ Function getModProcDics(modn As String)
     Set fncDic = CreateObject("Scripting.Dictionary")
     Set prpDic = CreateObject("Scripting.Dictionary")
     On Error Resume Next
-    Set cmp = ActiveWorkbook.VBProject.VBComponents(modn)
+    Set cmp = Application.VBE.ActiveVBProject.VBComponents(modn)
     With cmp.CodeModule
         If .CountOfLines > 0 Then
             procName = ""
@@ -357,24 +356,7 @@ Sub delPrefix(ifsn As String, clsn As String)
     End With
 End Sub
 
-Function addIfcPreFix(sLine, ifc, pos)
-    Dim ret
-    If pos = 1 Then
-        ret = ifc & "_" & sLine
-    Else
-        ret = Left(sLine, pos - 1) & ifc & "_" & Right(sLine, Len(sLine) - pos + 1)
-    End If
-    addIfcPreFix = ret
-End Function
-
-Function delIfcPreFix(sLine, ifc)
-    Dim ret
-    ret = Replace(sLine, ifc & "_", "")
-    ret = ifc & "_" & sLine
-    delIfcPreFix = ret
-End Function
-
-Function mkPrpStatement(x, tp, symbol)
+Private Function mkPrpStatement(x, tp, symbol)
     symbol = LCase(symbol)
     Dim ibol
     Dim st
@@ -465,7 +447,7 @@ endfor:
     End With
 End Sub
 
-Function partDcl(str)
+Private Function partDcl(str)
     bol = True
     s2 = ""
     s4 = ""
@@ -489,7 +471,7 @@ Function partDcl(str)
     partDcl = Array(bol, s2, s4)
 End Function
 
-Function partSymbol(str)
+Private Function partSymbol(str)
     Dim clc1, clc2, ary, elm
     Set clc1 = New Collection
     Set clc2 = New Collection
@@ -507,7 +489,7 @@ Function partSymbol(str)
     partSymbol = Array(clc1, clc2)
 End Function
 
-Function mkConstructorStatement(clsn As String, Optional arg = "ParamArray arg()") As String
+Private Function mkConstructorStatement(clsn As String, Optional arg = "ParamArray arg()") As String
     Dim ret(1 To 5)
     ret(1) = "Function " & clsn & "(" & arg & " ) As " & clsn
     ret(2) = "  Set " & clsn & " = New " & clsn
@@ -540,10 +522,8 @@ Sub mkInterFace(ifcn As String, impln As String, ParamArray ArgClsns())
         Set cmp = Application.VBE.ActiveVBProject.VBComponents(impln)
     End If
     If ifcn = "" Then ifcn = defaultInterfaceName(CStr(impln))
-    Set cmps = ActiveWorkbook.VBProject.VBComponents
-    Set sCmp = cmps(impln)
+    Set sCmp = Application.VBE.ActiveVBProject.VBComponents(impln)
     Set tCmp = mkModComponent(ifcn, "cls")
-    ' Call cpCode(ifcn, impln, "all")
     fncs = getModProcDics(impln)
     With tCmp.CodeModule
         fnckeys = fncs(0).keys
