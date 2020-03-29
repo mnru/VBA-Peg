@@ -499,16 +499,32 @@ Private Function mkConstructorStatement(clsn As String, Optional arg = "ParamArr
     mkConstructorStatement = Join(ret, vbCrLf)
 End Function
 
-Sub mkCst(toMod As String, clsns)
+Sub mkCst(tmpln As String, toMod As String, fromMod As String, clsns)
+    Dim arg
+    Dim tmpl As String
+    Dim sLines As String
     arg = clsns
     Set cmp = mkModComponent(toMod, "std")
     With cmp.CodeModule
+        tmpl = disposeProc("get", fromMod, "Cst_" & tmpln)(1)
         For i = UBound(arg) To LBound(arg) Step -1
-            str0 = mkConstructorStatement(CStr(arg(i)))
-            .AddFromString (vbCrLf & str0)
+            sLines = tmplToLines(tmpl, CStr(arg(i)))
+            .AddFromString (vbCrLf & sLines)
         Next i
     End With
 End Sub
+
+Function tmplToLines(src As String, nm As String)
+    Dim tmp
+    tmp = Split(src, vbCrLf)
+    For i = LBound(tmp) To UBound(tmp)
+        sLine = Trim(tmp(i))
+        If Len(sLine) > 0 And Left(sLine, 1) = "'" Then sLine = Right(sLine, Len(sLine) - 1)
+        sLine = Replace(sLine, "?", nm)
+        tmp(i) = sLine
+    Next i
+    tmplToLines = Join(tmp, vbCrLf)
+End Function
 
 Sub mkInterFace(ifcn As String, impln As String, ParamArray ArgClsns())
     Dim i
