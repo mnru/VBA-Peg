@@ -133,7 +133,7 @@ Sub delModComponentExcept(modns)
         modn = cmp.name
         Debug.Print modn
         bol = True
-        If cmp.Type <> 1 And cmp.Type <> 2 Then bol = False
+        If cmp.Type <> 1 And cmp.Type <> 2 And cmp.Type <> 3 Then bol = False
         For Each elm In modns
             If elm = modn Then bol = False
         Next elm
@@ -487,16 +487,6 @@ Private Function partSymbol(str)
         End If
     Next elm
     partSymbol = Array(clc1, clc2)
-End Function
-
-Private Function mkConstructorStatement(clsn As String, Optional arg = "ParamArray arg()") As String
-    Dim ret(1 To 5)
-    ret(1) = "Function " & clsn & "(" & arg & " ) As " & clsn
-    ret(2) = "  Set " & clsn & " = New " & clsn
-    ret(3) = "  prm = arg"
-    ret(4) = "  " & clsn & ".init(prm)"
-    ret(5) = "End Function"
-    mkConstructorStatement = Join(ret, vbCrLf)
 End Function
 
 Sub mkCst(tmpln As String, toMod As String, fromMod As String, clsns)
