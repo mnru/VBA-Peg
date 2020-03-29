@@ -42,7 +42,6 @@ Sub testDel()
     Call delModComponent("N0_")
     Call delModComponentExcept(clsns)
 End Sub
-'
 
 Sub testPart()
     x = Split("i,j,k,gt,ilt")

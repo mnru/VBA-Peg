@@ -2,13 +2,31 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "iParser_Impl"
+Attribute VB_Name = "Char"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
+Implements iParser
 Private m_name As String 'i_,g,l
 Private m_Parsers As Collection 'is,igo_,go,s_
+Private m_str As String
+
+Private Property Get name() As String
+    name = m_name
+End Property
+
+Private Property Let name(ByVal name_ As String)
+    m_name = name_
+End Property
+
+Private Property Get Parsers() As Collection
+    Set Parsers = m_Parsers
+End Property
+
+Public Property Set Parsers(Parsers_ As Collection)
+    Set m_Parsers = Parsers_
+End Property
 
 Function and_(parser As iParser) As iParser
     Set and_ = Seq(Me, parser)
@@ -30,9 +48,6 @@ Function r_() As iParser
     Set r_ = Rep0or1(Me)
 End Function
 
-Function internalMatch(state As ParseState)
-End Function
-
 Function match(somthing)
     If TypeName(something) = "String" Then
         Set state = PareseState(something, 0)
@@ -42,11 +57,9 @@ Function match(somthing)
     Set match = state
 End Function
 
-Function init(prm)
-    Set m_Parsers = New Collection
-    For Each elm In prm
-        Dim x As iParser
-        Set x = elm
-        m_Parsers.Add x
-    Next
+Function init(str)
+    m_str = str
+End Function
+
+Function internalMatch(state As ParseState)
 End Function

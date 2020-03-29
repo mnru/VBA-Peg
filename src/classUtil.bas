@@ -88,7 +88,7 @@ Function mkModComponent(modn As String, tp As String)
     mkModComponent.name = modn
 End Function
 
-Sub delProcs(Optional modn As String = "", Optional bolFnc = False, Optional bolPrP = False)
+Sub delProcs(Optional modn As String = "", Optional bolPrP = False, Optional bolFnc = False)
     'delete procedures in module "modn"
     If modn = "" Then modn = Application.VBE.SelectedVBComponent.name
     Set cmp = Application.VBE.ActiveVBProject.VBComponents(modn)
@@ -506,11 +506,30 @@ End Sub
 
 Function tmplToLines(src As String, nm As String)
     Dim tmp
+    Dim i
     tmp = Split(src, vbCrLf)
     For i = LBound(tmp) To UBound(tmp)
         sLine = Trim(tmp(i))
         If Len(sLine) > 0 And Left(sLine, 1) = "'" Then sLine = Right(sLine, Len(sLine) - 1)
         sLine = Replace(sLine, "?", nm)
+        tmp(i) = sLine
+    Next i
+    tmplToLines = Join(tmp, vbCrLf)
+End Function
+
+Function tmplToLines0(src As String, ParamArray prms())
+    Dim tmp
+    Dim arg
+    Dim n, i, j
+    arg = prms
+    n = UBound(arg)
+    tmp = Split(src, vbCrLf)
+    For i = LBound(tmp) To UBound(tmp)
+        sLine = Trim(tmp(i))
+        If Len(sLine) > 0 And Left(sLine, 1) = "'" Then sLine = Right(sLine, Len(sLine) - 1)
+        For j = 0 To n
+            sLine = Replace(sLine, "?" & j, arg(j))
+        Next j
         tmp(i) = sLine
     Next i
     tmplToLines = Join(tmp, vbCrLf)
