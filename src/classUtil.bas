@@ -498,41 +498,68 @@ Sub mkCst(tmpln As String, toMod As String, fromMod As String, clsns)
     With cmp.CodeModule
         tmpl = disposeProc("get", fromMod, "Cst_" & tmpln)(1)
         For i = UBound(arg) To LBound(arg) Step -1
-            sLines = tmplToLines(tmpl, CStr(arg(i)))
+            sLines = writeToTmpl(tmpl, CStr(arg(i)))
             .AddFromString (vbCrLf & sLines)
         Next i
     End With
 End Sub
 
-Function tmplToLines(src As String, nm As String)
+Function delTypeInDcl(elms As String)
+    ret = Split(elms, ",")
+    For i = LBound(ret) To UBound(ret)
+        tmp = Trim(ret(i))
+        pos = InStr(tmp, " ")
+        tmp = Left(tmp, pos - 1)
+        ret(i) = tmp
+    Next i
+    delTypeInDcl = Join(ret, ",")
+End Function
+
+Sub mkCstPrm(tmpln As String, toMod As String, fromMod As String, clsn)
+    Dim arg
+    Dim tmpl As String
+    Dim sLines As String
+    arg = clsns
+    Set cmp = mkModComponent(toMod, "std")
+    With cmp.CodeModule
+        tmpl = disposeProc("get", fromMod, "Cst_" & tmpln)(1)
+        For i = UBound(arg) To LBound(arg) Step -1
+            sLines = writeToTmpl(tmpl, CStr(arg(i)))
+            .AddFromString (vbCrLf & sLines)
+        Next i
+    End With
+End Sub
+
+Function writeToTmpl(src As String, nm As String)
     Dim tmp
     Dim i
     tmp = Split(src, vbCrLf)
     For i = LBound(tmp) To UBound(tmp)
         sLine = Trim(tmp(i))
         If Len(sLine) > 0 And Left(sLine, 1) = "'" Then sLine = Right(sLine, Len(sLine) - 1)
-        sLine = Replace(sLine, "?", nm)
+        sLine = Replace(sLine, "$", nm)
         tmp(i) = sLine
     Next i
-    tmplToLines = Join(tmp, vbCrLf)
+    writeToTmpl = Join(tmp, vbCrLf)
 End Function
 
-Function tmplToLines0(src As String, ParamArray prms())
+Function writePrmsToTmpl(src As String, prms)
     Dim tmp
     Dim arg
     Dim n, i, j
     arg = prms
-    n = UBound(arg)
     tmp = Split(src, vbCrLf)
+    ReDim ret(LBound(tmp) To UBound(tmp))
     For i = LBound(tmp) To UBound(tmp)
         sLine = Trim(tmp(i))
         If Len(sLine) > 0 And Left(sLine, 1) = "'" Then sLine = Right(sLine, Len(sLine) - 1)
-        For j = 0 To n
-            sLine = Replace(sLine, "?" & j, arg(j))
+        For j = 0 To UBound(arg)
+            v = "$" & j
+            sLine = Replace(sLine, v, arg(j))
         Next j
         tmp(i) = sLine
     Next i
-    tmplToLines = Join(tmp, vbCrLf)
+    writePrmsToTmpl = Join(tmp, vbCrLf)
 End Function
 
 Sub mkInterFace(ifcn As String, impln As String, ParamArray ArgClsns())

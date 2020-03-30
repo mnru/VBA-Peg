@@ -48,3 +48,21 @@ Sub testPart()
     y = partSymbol(x)
     Stop
 End Sub
+
+Sub testTmpl()
+    Dim arg
+    Dim tmpl As String
+    Dim dclPrms As String
+    Dim prms As String
+    fromMod = "classGenerator"
+    tmpln = "Parser_Prm"
+    dclPrms = "a as string,b as long"
+    prms = delTypeInDcl(dclPrms)
+    arg = Array("Node", dclPrms, prms)
+    '   Set cmp = mkModComponent(toMod, "std")
+    '    With cmp.CodeModule
+    tmpl = disposeProc("get", fromMod, "Cst_" & tmpln)(1)
+    ret = writePrmsToTmpl(tmpl, arg)
+    Debug.Print ret
+    '   End With
+End Sub

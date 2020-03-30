@@ -14,28 +14,28 @@ Sub genrateConstructor()
 End Sub
 
 Sub initializeClass()
-    clsns = Array("iParser_Impl", "classUtil", "classGenerator", "testCode", "ParseState", "Node")
+    clsns = Array("iParser_Impl", "classUtil", "classGenerator", "testCode", "ParseState", "Node", "G")
     delModComponentExcept (clsns)
 End Sub
 
 Function Cst_Parser_Parsers()
-    'Function ?(ParamArray arg()) As ?
-    '  Set ? = New ?
+    'Function $(ParamArray arg()) As $
+    '  Set $ = New $
     '  prm = arg
-    '  ?.init (prm)
+    '  $.init (prm)
     'End Function
 End Function
 
 Function Cst_Parser_String()
-    'Function ?(str As String) As ?
-    '  Set ? = New ?
-    '  ?.init (str)
+    'Function $(str As String) As $
+    '  Set $ = New $
+    '  $.init (str)
     'End Function
 End Function
 
 Function Cst_Parser_Prm()
-    'Function ?0(?1 As ?2) As ?0
-    '  Set ?0 = New ?0
-    '  ?0.init (?1)
+    'Function $0($1) As $0
+    '  Set $0 = New $0
+    '  $0.init ($2)
     'End Function
 End Function
