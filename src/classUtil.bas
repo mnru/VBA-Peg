@@ -237,6 +237,34 @@ Private Function lenAry(ary)
     lenAry = UBound(ary) - LBound(ary) + 1
 End Function
 
+Private Function conArys(ParamArray argArys())
+    Dim num As Long, i As Long
+    Dim arys, ret, elm, ary
+    arys = argArys
+    num = 0
+    For Each ary In arys
+        If IsArray(ary) Then
+            num = num + lenAry(ary)
+        Else
+            num = num + 1
+        End If
+    Next ary
+    ReDim ret(0 To num - 1)
+    i = 0
+    For Each ary In arys
+        If IsArray(ary) Then
+            For Each elm In ary
+                ret(i) = elm
+                i = i + 1
+            Next elm
+        Else
+            ret(i) = ary
+            i = i + 1
+        End If
+    Next ary
+    conArys = ret
+End Function
+
 Private Function defaultInterfaceName(clsn As String)
     n = InStr(clsn, "_")
     If n > 0 Then
@@ -509,11 +537,22 @@ Function delTypeInDcl(elms As String)
     For i = LBound(ret) To UBound(ret)
         tmp = Trim(ret(i))
         pos = InStr(tmp, " ")
-        tmp = Left(tmp, pos - 1)
+        If pos > 1 Then tmp = Left(tmp, pos - 1)
         ret(i) = tmp
     Next i
     delTypeInDcl = Join(ret, ",")
 End Function
+
+Function mkCstWithPrm(clsn As String, dclPrms As String, _
+    Optional tmpln As String = "Cst_Parser_Prm", Optional fromMod As String = "classGenerator")
+    Dim arg
+    Dim tmpl As String
+    Dim prms As String
+    prms = delTypeInDcl(dclPrms)
+    arg = Array(clsn, dclPrms, prms)
+    tmpl = disposeProc("get", fromMod, tmpln)(1)
+    mkCstWithPrm = writePrmsToTmpl(tmpl, arg)
+ End Function
 
 Sub mkCstPrm(tmpln As String, toMod As String, fromMod As String, clsn)
     Dim arg

@@ -66,3 +66,10 @@ Sub testTmpl()
     Debug.Print ret
     '   End With
 End Sub
+
+Sub testTmpl1()
+ str0 = mkCstWithPrm("ParseState", "inputs As String, pos As Long, nodes")
+ Debug.Print str0
+
+End Sub
+

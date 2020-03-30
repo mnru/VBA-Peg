@@ -36,6 +36,6 @@ End Function
 Function Cst_Parser_Prm()
     'Function $0($1) As $0
     '  Set $0 = New $0
-    '  $0.init ($2)
+    '  $0.init($2)
     'End Function
 End Function
