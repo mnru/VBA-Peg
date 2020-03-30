@@ -68,8 +68,6 @@ Sub testTmpl()
 End Sub
 
 Sub testTmpl1()
- str0 = mkCstWithPrm("ParseState", "inputs As String, pos As Long, nodes")
- Debug.Print str0
-
+    str0 = mkCstPrmLines("ParseState", "inputs As String, pos As Long, nodes")
+    Debug.Print str0
 End Sub
-

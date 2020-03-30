@@ -11,10 +11,11 @@ Sub genrateConstructor()
     Call mkSubClass("iParser", "iParser_impl", clsns2)
     Call mkCst("Parser_Parsers", "G", "classGenerator", clsns1)
     Call mkCst("Parser_String", "G", "classGenerator", clsns2)
+    Call mkCstPrm("G", "ParseState", "inputs As String, pos As Long, nodes")
 End Sub
 
 Sub initializeClass()
-    clsns = Array("iParser_Impl", "classUtil", "classGenerator", "testCode", "ParseState", "Node", "G")
+    clsns = Array("iParser_Impl", "classUtil", "classGenerator", "testCode", "ParseState", "Node")
     delModComponentExcept (clsns)
 End Sub
 
@@ -36,6 +37,6 @@ End Function
 Function Cst_Parser_Prm()
     'Function $0($1) As $0
     '  Set $0 = New $0
-    '  $0.init($2)
+    '  call $0.init($2)
     'End Function
 End Function

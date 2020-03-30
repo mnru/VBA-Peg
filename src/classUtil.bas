@@ -532,6 +532,17 @@ Sub mkCst(tmpln As String, toMod As String, fromMod As String, clsns)
     End With
 End Sub
 
+Sub mkCstPrm(toMod As String, clsn As String, dclPrms As String, _
+    Optional tmpln As String = "Cst_Parser_Prm", Optional fromMod As String = "classGenerator")
+    Dim sLines As String
+    Dim cmp
+    sLines = mkCstPrmLines(clsn, dclPrms)
+    Set cmp = mkModComponent(toMod, "std")
+    With cmp.CodeModule
+        .AddFromString (vbCrLf & sLines)
+    End With
+End Sub
+
 Function delTypeInDcl(elms As String)
     ret = Split(elms, ",")
     For i = LBound(ret) To UBound(ret)
@@ -543,7 +554,7 @@ Function delTypeInDcl(elms As String)
     delTypeInDcl = Join(ret, ",")
 End Function
 
-Function mkCstWithPrm(clsn As String, dclPrms As String, _
+Function mkCstPrmLines(clsn As String, dclPrms As String, _
     Optional tmpln As String = "Cst_Parser_Prm", Optional fromMod As String = "classGenerator")
     Dim arg
     Dim tmpl As String
@@ -551,23 +562,8 @@ Function mkCstWithPrm(clsn As String, dclPrms As String, _
     prms = delTypeInDcl(dclPrms)
     arg = Array(clsn, dclPrms, prms)
     tmpl = disposeProc("get", fromMod, tmpln)(1)
-    mkCstWithPrm = writePrmsToTmpl(tmpl, arg)
- End Function
-
-Sub mkCstPrm(tmpln As String, toMod As String, fromMod As String, clsn)
-    Dim arg
-    Dim tmpl As String
-    Dim sLines As String
-    arg = clsns
-    Set cmp = mkModComponent(toMod, "std")
-    With cmp.CodeModule
-        tmpl = disposeProc("get", fromMod, "Cst_" & tmpln)(1)
-        For i = UBound(arg) To LBound(arg) Step -1
-            sLines = writeToTmpl(tmpl, CStr(arg(i)))
-            .AddFromString (vbCrLf & sLines)
-        Next i
-    End With
-End Sub
+    mkCstPrmLines = writePrmsToTmpl(tmpl, arg)
+End Function
 
 Function writeToTmpl(src As String, nm As String)
     Dim tmp
