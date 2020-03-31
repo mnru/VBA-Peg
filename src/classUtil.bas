@@ -607,6 +607,18 @@ Function tmplToCode0(tmpl As String, args)
     tmplToCode0 = Join(ret, vbCrLf)
 End Function
 
+Sub overRideByTmpl(fnc As String, knd As Long, tmpln As String, toMod As String, fromMod As String)
+    Dim sLines, cmp
+    tmpl = disposeProc("get", fromMod, tmpln, 0)(1)
+    Set cmp = getComponent(toMod)
+    With cmp.CodeModule
+        lnum = .ProcStartLine(fnc, knd)
+        Call .DeleteLines(lnum, .ProcCountLines(fnc, knd))
+        sCode = tmplToCode(tmpl)
+        Call .InsertLines(lnum, sCode)
+    End With
+End Sub
+
 Sub overRide(fnc As String, knd As Long, toMod As String, fromMod As String)
     Dim sLines, cmp
     sLines = disposeProc("get", fromMod, fnc, knd)
