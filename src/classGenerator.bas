@@ -12,6 +12,7 @@ Sub genrateConstructor()
     Call mkCst("Parser_Parsers", "G", "classGenerator", clsns1)
     Call mkCst("Parser_String", "G", "classGenerator", clsns2)
     Call mkCstPrm("G", "ParseState", "inputs As String, pos As Long, nodes")
+    Call mkCstPrm("G", "Node", "begin As long,label As String,inputs As String")
 End Sub
 
 Sub initializeClass()

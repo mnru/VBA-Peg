@@ -13,7 +13,7 @@ Function disposeProc(tp, modn, procName, Optional knd = 0, Optional sCode = "")
     With cmp.CodeModule
         linecnt = .ProcCountLines(procName, knd)
         lineStart = .ProcStartLine(procName, knd)
-        lineDef = .procBodyLine(procName, knd)
+        lineDef = .ProcBodyLine(procName, knd)
         lineEnd = lineStart + linecnt - 1
         For i = 1 To linecnt - 1
             str0 = Trim(.Lines(lineEnd, 1))
@@ -72,7 +72,19 @@ Function getNoOptionLine(modn)
     getNoOptionLine = ret
 End Function
 
-Function mkModComponent(modn As String, tp As String)
+Function getComponent(modn As String)
+    'get  module  of which name of "modn"
+    Set cmps = Application.VBE.ActiveVBProject.VBComponents
+    For Each cmp In cmps
+        If LCase(cmp.name) = LCase(modn) Then
+            Set getComponent = cmp
+            Exit Function
+        End If
+    Next cmp
+    Debug.Print "doesn't exists module " & modn
+End Function
+
+Function mkComponent(modn As String, tp As String)
     'get  module  of which name of "modn"  if exist,or create module of type "tp"
     'tp mod,cls,frm
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
@@ -80,12 +92,12 @@ Function mkModComponent(modn As String, tp As String)
         '    Debug.Print cmp.name
         If LCase(cmp.name) = LCase(modn) Then
             Debug.Print "Already Exists Component " & modn
-            Set mkModComponent = cmp
+            Set mkComponent = cmp
             Exit Function
         End If
     Next cmp
-    Set mkModComponent = cmps.Add(typeNum(tp))
-    mkModComponent.name = modn
+    Set mkComponent = cmps.Add(typeNum(tp))
+    mkComponent.name = modn
 End Function
 
 Sub delProcs(Optional modn As String = "", Optional bolPrP = False, Optional bolFnc = False)
@@ -109,7 +121,7 @@ Sub delProcs(Optional modn As String = "", Optional bolPrP = False, Optional bol
     End With
 End Sub
 
-Sub delModComponent(modn As String)
+Sub delComponent(modn As String)
     'delete module component
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
@@ -127,7 +139,7 @@ Sub delModComponent(modn As String)
     End If
 End Sub
 
-Sub delModComponentExcept(modns)
+Sub delComponentExcept(modns)
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
         modn = cmp.name
@@ -144,7 +156,7 @@ Sub delModComponentExcept(modns)
     Next cmp
 End Sub
 
-Sub printModComponents()
+Sub printComponents()
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
         Debug.Print cmp.name
@@ -324,7 +336,7 @@ Sub addPrefix(ifsn As String, clsn As String)
     fncs = getModProcDics(ifsn)
     Dim sLine
     Dim cmp 'As VBComponent
-    Set cmp = mkModComponent(clsn, "cls")
+    Set cmp = mkComponent(clsn, "cls")
     With cmp.CodeModule
         For i = .CountOfDeclarationLines To .CountOfLines
             tmp = .Lines(i, 1)
@@ -357,7 +369,7 @@ Sub delPrefix(ifsn As String, clsn As String)
     fncs = getModProcDics(ifsn)
     Dim sLine
     Dim cmp 'As VBComponent
-    Set cmp = mkModComponent(clsn, "cls")
+    Set cmp = mkComponent(clsn, "cls")
     With cmp.CodeModule
         For i = .CountOfDeclarationLines To .CountOfLines
             tmp = .Lines(i, 1)
@@ -451,7 +463,7 @@ Sub mkPrp(Optional ifcn As String = "", Optional impln As String = "", Optional 
                 Set symbolI = arySymbol(0)
                 Set symbolNotI = arySymbol(1)
                 If mkI Then
-                    Set cmp0 = mkModComponent(ifcn, "cls")
+                    Set cmp0 = mkComponent(ifcn, "cls")
                     For j = symbolI.Count To 1 Step -1
                         s = symbolI(j)
                         s1 = aryDcl(1)
@@ -522,7 +534,7 @@ Sub mkCst(tmpln As String, toMod As String, fromMod As String, clsns)
     Dim tmpl As String
     Dim sLines As String
     arg = clsns
-    Set cmp = mkModComponent(toMod, "std")
+    Set cmp = mkComponent(toMod, "std")
     With cmp.CodeModule
         tmpl = disposeProc("get", fromMod, "Cst_" & tmpln)(1)
         For i = UBound(arg) To LBound(arg) Step -1
@@ -537,7 +549,7 @@ Sub mkCstPrm(toMod As String, clsn As String, dclPrms As String, _
     Dim sLines As String
     Dim cmp
     sLines = mkCstPrmLines(clsn, dclPrms)
-    Set cmp = mkModComponent(toMod, "std")
+    Set cmp = mkComponent(toMod, "std")
     With cmp.CodeModule
         .AddFromString (vbCrLf & sLines)
     End With
@@ -597,6 +609,9 @@ Function writePrmsToTmpl(src As String, prms)
     writePrmsToTmpl = Join(tmp, vbCrLf)
 End Function
 
+Sub override(fnc, knd, toMod, fromMod)
+End Sub
+
 Sub mkInterFace(ifcn As String, impln As String, ParamArray ArgClsns())
     Dim i
     Dim clsns
@@ -610,7 +625,7 @@ Sub mkInterFace(ifcn As String, impln As String, ParamArray ArgClsns())
     End If
     If ifcn = "" Then ifcn = defaultInterfaceName(CStr(impln))
     Set sCmp = Application.VBE.ActiveVBProject.VBComponents(impln)
-    Set tCmp = mkModComponent(ifcn, "cls")
+    Set tCmp = mkComponent(ifcn, "cls")
     fncs = getModProcDics(impln)
     With tCmp.CodeModule
         fnckeys = fncs(0).keys
@@ -629,7 +644,7 @@ Sub mkSubClass(ifcn As String, impln As String, sclsns)
     If ifcn = "" Then ifcn = defaultInterfaceName(CStr(impln))
     Set cmps = Application.VBE.SelectedVBComponent
     For Each sclsn In sclsns
-        Set tCmp = mkModComponent(CStr(sclsn), "cls")
+        Set tCmp = mkComponent(CStr(sclsn), "cls")
         Call cpCode(impln, sclsn, "all")
         With tCmp.CodeModule
             sLine = "implements " & ifcn

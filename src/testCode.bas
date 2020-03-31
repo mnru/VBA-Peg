@@ -39,8 +39,8 @@ End Sub
 
 Sub testDel()
     clsns = Array("classGenerator", "classUtil", "G", "iParser_Impl")
-    Call delModComponent("N0_")
-    Call delModComponentExcept(clsns)
+    Call delComponent("N0_")
+    Call delComponentExcept(clsns)
 End Sub
 
 Sub testPart()
@@ -59,7 +59,7 @@ Sub testTmpl()
     dclPrms = "a as string,b as long"
     prms = delTypeInDcl(dclPrms)
     arg = Array("Node", dclPrms, prms)
-    '   Set cmp = mkModComponent(toMod, "std")
+    '   Set cmp = mkComponent(toMod, "std")
     '    With cmp.CodeModule
     tmpl = disposeProc("get", fromMod, "Cst_" & tmpln)(1)
     ret = writePrmsToTmpl(tmpl, arg)
@@ -70,4 +70,11 @@ End Sub
 Sub testTmpl1()
     str0 = mkCstPrmLines("ParseState", "inputs As String, pos As Long, nodes")
     Debug.Print str0
+End Sub
+
+Sub testo()
+    Set cmp = mkComponent("testCode", "std")
+    With cmp.CodeModule
+        Call .InsertLines(.ProcBodyLine("testtmpl1", 0), "")
+    End With
 End Sub
