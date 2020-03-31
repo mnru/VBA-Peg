@@ -17,21 +17,21 @@ End Sub
 
 Sub initializeClass()
     clsns = Array("iParser_Impl", "classUtil", "classGenerator", "testCode", "ParseState", "Node")
-    delModComponentExcept (clsns)
+    delComponentExcept (clsns)
 End Sub
 
 Function Cst_Parser_Parsers()
-    'Function $(ParamArray arg()) As $
-    '  Set $ = New $
+    'Function $0(ParamArray arg()) As $0
+    '  Set $0 = New $0
     '  prm = arg
-    '  $.init (prm)
+    '  $0.init (prm)
     'End Function
 End Function
 
 Function Cst_Parser_String()
-    'Function $(str As String) As $
-    '  Set $ = New $
-    '  $.init (str)
+    'Function $0(str As String) As $0
+    '  Set $0 = New $0
+    '  $0.init (str)
     'End Function
 End Function
 

@@ -100,27 +100,6 @@ Function mkComponent(modn As String, tp As String)
     mkComponent.name = modn
 End Function
 
-Sub delProcs(Optional modn As String = "", Optional bolPrP = False, Optional bolFnc = False)
-    'delete procedures in module "modn"
-    If modn = "" Then modn = Application.VBE.SelectedVBComponent.name
-    Set cmp = Application.VBE.ActiveVBProject.VBComponents(modn)
-    fncs = getModProcDics(modn)
-    With cmp.CodeModule
-        If bolFnc Then
-            For Each fnc In fncs(0).keys
-                Call .DeleteLines(.ProcStartLine(fnc, 0), .ProcCountLines(fnc, 0))
-            Next fnc
-        End If
-        If bolPrP Then
-            For Each prp In fncs(1).keys
-                For Each knd In fncs(1)(prp)
-                    Call .DeleteLines(.ProcStartLine(prp, knd), .ProcCountLines(prp, knd))
-                Next knd
-            Next prp
-        End If
-    End With
-End Sub
-
 Sub delComponent(modn As String)
     'delete module component
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
@@ -154,6 +133,36 @@ Sub delComponentExcept(modns)
             Debug.Print "Delete Component " & modn
         End If
     Next cmp
+End Sub
+
+Sub delProc(fnc As String, Optional knd As Long = 0, Optional modn As String = "")
+    'delete procedures in module "modn"
+    If modn = "" Then modn = Application.VBE.SelectedVBComponent.name
+    Set cmp = Application.VBE.ActiveVBProject.VBComponents(modn)
+    With cmp.CodeModule
+        Call .DeleteLines(.ProcStartLine(fnc, knd), .ProcCountLines(fnc, knd))
+    End With
+End Sub
+
+Sub delProcs(Optional modn As String = "", Optional bolPrP = False, Optional bolFnc = False)
+    'delete procedures in module "modn"
+    If modn = "" Then modn = Application.VBE.SelectedVBComponent.name
+    Set cmp = Application.VBE.ActiveVBProject.VBComponents(modn)
+    fncs = getModProcDics(modn)
+    With cmp.CodeModule
+        If bolFnc Then
+            For Each fnc In fncs(0).keys
+                Call .DeleteLines(.ProcStartLine(fnc, 0), .ProcCountLines(fnc, 0))
+            Next fnc
+        End If
+        If bolPrP Then
+            For Each prp In fncs(1).keys
+                For Each knd In fncs(1)(prp)
+                    Call .DeleteLines(.ProcStartLine(prp, knd), .ProcCountLines(prp, knd))
+                Next knd
+            Next prp
+        End If
+    End With
 End Sub
 
 Sub printComponents()
@@ -577,39 +586,36 @@ Function mkCstPrmLines(clsn As String, dclPrms As String, _
     mkCstPrmLines = writePrmsToTmpl(tmpl, arg)
 End Function
 
-Function writeToTmpl(src As String, nm As String)
-    Dim tmp
-    Dim i
-    tmp = Split(src, vbCrLf)
-    For i = LBound(tmp) To UBound(tmp)
-        sLine = Trim(tmp(i))
-        If Len(sLine) > 0 And Left(sLine, 1) = "'" Then sLine = Right(sLine, Len(sLine) - 1)
-        sLine = Replace(sLine, "$", nm)
-        tmp(i) = sLine
-    Next i
-    writeToTmpl = Join(tmp, vbCrLf)
+Function writeToTmpl(src As String, ParamArray prms())
+    args = prms
+    writeToTmpl = writePrmsToTmpl(src, args)
 End Function
 
-Function writePrmsToTmpl(src As String, prms)
-    Dim tmp
-    Dim arg
-    Dim n, i, j
-    arg = prms
-    tmp = Split(src, vbCrLf)
-    ReDim ret(LBound(tmp) To UBound(tmp))
-    For i = LBound(tmp) To UBound(tmp)
-        sLine = Trim(tmp(i))
+Function writePrmsToTmpl(src As String, args)
+    Dim ret, sLine
+    Dim n0, i, j
+    n0 = LBound(args)
+    ret = Split(src, vbCrLf)
+    For i = LBound(ret) To UBound(ret)
+        sLine = Trim(ret(i))
         If Len(sLine) > 0 And Left(sLine, 1) = "'" Then sLine = Right(sLine, Len(sLine) - 1)
-        For j = 0 To UBound(arg)
-            v = "$" & j
-            sLine = Replace(sLine, v, arg(j))
+        For j = 0 To lenAry(args) - 1
+            sLine = Replace(sLine, "$" & j, args(n0 + j))
         Next j
-        tmp(i) = sLine
+        ret(i) = sLine
     Next i
-    writePrmsToTmpl = Join(tmp, vbCrLf)
+    writePrmsToTmpl = Join(ret, vbCrLf)
 End Function
 
-Sub override(fnc, knd, toMod, fromMod)
+Sub overRide(fnc As String, knd As Long, toMod As String, fromMod As String)
+    Dim sLines, cmp
+    sLines = disposeProc("get", fromMod, fnc, knd)
+    Set cmp = getComponent(toMod)
+    With cmp.CodeModule
+        lnum = .ProcStartLine(fnc, knd)
+        Call .DeleteLines(lnum, .ProcCountLines(fnc, knd))
+        Call .InsertLines(lnum, Join(sLines, vbCrLf))
+    End With
 End Sub
 
 Sub mkInterFace(ifcn As String, impln As String, ParamArray ArgClsns())
@@ -652,3 +658,25 @@ Sub mkSubClass(ifcn As String, impln As String, sclsns)
         End With
     Next sclsn
 End Sub
+
+Function testcode2(src As String, prms)
+    Dim tmp
+    Dim arg
+    Dim n, i, j
+    arg = prms
+    tmp = Split(src, vbCrLf)
+    ReDim ret(LBound(tmp) To UBound(tmp))
+    For i = LBound(tmp) To UBound(tmp)
+        sLine = Trim(tmp(i))
+        If Len(sLine) > 0 And Left(sLine, 1) = "'" Then sLine = Right(sLine, Len(sLine) - 1)
+        For j = 0 To UBound(arg)
+            v = "$" & j
+            sLine = Replace(sLine, v, arg(j))
+        Next j
+        tmp(i) = sLine
+    Next i
+    writePrmsToTmpl = Join(tmp, vbCrLf)
+End Function
+
+Function testcode3(src As String, prms)
+End Function

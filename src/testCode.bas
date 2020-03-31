@@ -12,6 +12,32 @@ Sub testcode1()
     Call mkSubClass("SpecialLogWriter", , "LogWriter")
 End Sub
 
+Function testcode2(src As String, prms)
+    Dim tmp
+    Dim arg
+    Dim n, i, j
+    arg = prms
+    tmp = Split(src, vbCrLf)
+    ReDim ret(LBound(tmp) To UBound(tmp))
+    For i = LBound(tmp) To UBound(tmp)
+        sLine = Trim(tmp(i))
+        If Len(sLine) > 0 And Left(sLine, 1) = "'" Then sLine = Right(sLine, Len(sLine) - 1)
+        For j = 0 To UBound(arg)
+            v = "$" & j
+            sLine = Replace(sLine, v, arg(j))
+        Next j
+        tmp(i) = sLine
+    Next i
+    writePrmsToTmpl = Join(tmp, vbCrLf)
+End Function
+
+Function testcode3(src As String, prms)
+End Function
+
+Sub testcode4()
+    Call mkSubClass("SpecialLogWriter", , "LogWriter")
+End Sub
+
 Sub testprp()
     Debug.Print mkPrpStatement("abc", "Long", "g")(1)
     Debug.Print mkPrpStatement("abc", "Long", "g_")(1)
@@ -77,4 +103,9 @@ Sub testo()
     With cmp.CodeModule
         Call .InsertLines(.ProcBodyLine("testtmpl1", 0), "")
     End With
+End Sub
+
+Sub testOverride()
+    Call overRide("testcode2", 0, "testCode", "classUtil")
+    Call overRide("testcode3", 0, "testCode", "classUtil")
 End Sub
