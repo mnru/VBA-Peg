@@ -547,7 +547,7 @@ Sub mkCst(tmpln As String, toMod As String, fromMod As String, clsns)
     With cmp.CodeModule
         tmpl = disposeProc("get", fromMod, "Cst_" & tmpln)(1)
         For i = UBound(arg) To LBound(arg) Step -1
-            sLines = writeToTmpl(tmpl, CStr(arg(i)))
+            sLines = tmplToCode(tmpl, CStr(arg(i)))
             .AddFromString (vbCrLf & sLines)
         Next i
     End With
@@ -583,28 +583,28 @@ Function mkCstPrmLines(clsn As String, dclPrms As String, _
     prms = delTypeInDcl(dclPrms)
     arg = Array(clsn, dclPrms, prms)
     tmpl = disposeProc("get", fromMod, tmpln)(1)
-    mkCstPrmLines = writePrmsToTmpl(tmpl, arg)
+    mkCstPrmLines = tmplToCode0(tmpl, arg)
 End Function
 
-Function writeToTmpl(src As String, ParamArray prms())
+Function tmplToCode(tmpl As String, ParamArray prms())
     args = prms
-    writeToTmpl = writePrmsToTmpl(src, args)
+    tmplToCode = tmplToCode0(tmpl, args)
 End Function
 
-Function writePrmsToTmpl(src As String, args)
+Function tmplToCode0(tmpl As String, args)
     Dim ret, sLine
     Dim n0, i, j
     n0 = LBound(args)
-    ret = Split(src, vbCrLf)
+    ret = Split(tmpl, vbCrLf)
     For i = LBound(ret) To UBound(ret)
-        sLine = Trim(ret(i))
+        sLine = LTrim(ret(i))
         If Len(sLine) > 0 And Left(sLine, 1) = "'" Then sLine = Right(sLine, Len(sLine) - 1)
         For j = 0 To lenAry(args) - 1
             sLine = Replace(sLine, "$" & j, args(n0 + j))
         Next j
         ret(i) = sLine
     Next i
-    writePrmsToTmpl = Join(ret, vbCrLf)
+    tmplToCode0 = Join(ret, vbCrLf)
 End Function
 
 Sub overRide(fnc As String, knd As Long, toMod As String, fromMod As String)
@@ -675,7 +675,7 @@ Function testcode2(src As String, prms)
         Next j
         tmp(i) = sLine
     Next i
-    writePrmsToTmpl = Join(tmp, vbCrLf)
+    tmplToCode0 = Join(tmp, vbCrLf)
 End Function
 
 Function testcode3(src As String, prms)
