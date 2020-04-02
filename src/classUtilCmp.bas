@@ -1,6 +1,6 @@
 Attribute VB_Name = "classUtilCmp"
 Function getComponent(modn As String)
-    'get  module  of which name of "modn"
+    'get module of which name of "modn"
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
         If LCase(cmp.name) = LCase(modn) Then
@@ -12,11 +12,11 @@ Function getComponent(modn As String)
 End Function
 
 Function mkComponent(modn As String, tp As String)
-    'get  module  of which name of "modn"  if exist,or create module of type "tp"
+    'get module of which name of "modn" if exist,or create module of type "tp"
     'tp mod,cls,frm
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
-        '    Debug.Print cmp.name
+        '  Debug.Print cmp.name
         If LCase(cmp.name) = LCase(modn) Then
             Debug.Print "Already Exists Component " & modn
             Set mkComponent = cmp
@@ -31,10 +31,10 @@ Sub delComponent(modn As String)
     'delete module component
     Set cmps = Application.VBE.ActiveVBProject.VBComponents
     For Each cmp In cmps
-        '   Debug.Print cmp.name
+        '  Debug.Print cmp.name
         If cmp.name = modn Then
             cmps.Remove cmp
-            'MsgBox  "Delete Component " & modn
+            'MsgBox "Delete Component " & modn
             Debug.Print "Delete Component " & modn
             bol = True
             Exit Sub

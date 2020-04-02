@@ -80,21 +80,22 @@ Sub testTmpl()
     Dim tmpl As String
     Dim dclPrms As String
     Dim prms As String
-    fromMod = "classGenerator"
-    tmpln = "Parser_Prm"
-    dclPrms = "a as string,b as long"
-    prms = delTypeInDcl(dclPrms)
-    arg = Array("Node", dclPrms, prms)
+    fromMod = "classUtilTmpl"
+    tmpln = "tmpl_cst_prms"
+    prms = "a;string,b;long"
+    dcl = commentToDcl(prms)
+    asn = commentToDcl(prms, "assign")
+    arg = Array("Node", dcl, asn)
     '   Set cmp = mkComponent(toMod, "std")
     '    With cmp.CodeModule
-    tmpl = disposeProc("get", fromMod, "Cst_" & tmpln)(1)
-    ret = writePrmsToTmpl(tmpl, arg)
+    tmpl = disposeProc("get", fromMod, tmpln)(1)
+    ret = tmplToCode0(tmpl, arg)
     Debug.Print ret
     '   End With
 End Sub
 
 Sub testTmpl1()
-    str0 = mkCstPrmLines("ParseState", "inputs As String, pos As Long, nodes")
+    str0 = mkCstPrmLines("ParseState", "inputs;String, pos;Long, nodes")
     Debug.Print str0
 End Sub
 
