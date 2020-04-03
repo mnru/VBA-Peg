@@ -1,5 +1,7 @@
 Attribute VB_Name = "classUtilTmpl"
-Sub mkCst(tmpln As String, toMod As String, fromMod As String, clsns)
+Public interfaceDics
+
+Sub mkCst(toMod As String, tmpln As String, fromMod As String, clsns)
     Dim arg
     Dim tmpl As String
     Dim sLines As String
@@ -14,48 +16,24 @@ Sub mkCst(tmpln As String, toMod As String, fromMod As String, clsns)
     End With
 End Sub
 
-Sub mkCstPrm(toMod As String, clsn As String, dclPrms As String, _
+Sub mkCstPrm(toMod As String, clsn As String, dclprms As String, _
     Optional tmpln As String = "tmpl_Cst_Prms", Optional fromMod As String = "classUtilTmpl")
     Dim sLines As String
     Dim cmp
-    sLines = mkCstPrmLines(clsn, dclPrms, tmpln, fromMod)
+    sLines = mkCstPrmLines(clsn, dclprms, tmpln, fromMod)
     Set cmp = mkComponent(toMod, "std")
     With cmp.CodeModule
         .AddFromString (vbCrLf & sLines)
     End With
 End Sub
 
-Function commentToDcl(elms As String, Optional tp = "declare")
-    prms = Split(elms, ",")
-    n = UBound(prms)
-    ReDim ret(0 To n)
-    For i = 0 To n
-        tmp = Split(prms(i), ";")
-        For j = 0 To UBound(tmp)
-            tmp(j) = Trim(tmp(j))
-        Next
-        Select Case tp
-            Case "assign"
-                ret(i) = tmp(0)
-            Case "declare"
-                If tmp(1) = "" Then
-                    ret(i) = tmp(0)
-                Else
-                    ret(i) = tmp(0) & " As " & tmp(1)
-                End If
-            Case Else
-        End Select
-    Next i
-    commentToDcl = Join(ret, ",")
-End Function
-
-Function mkCstPrmLines(clsn As String, dclPrms As String, _
+Function mkCstPrmLines(clsn As String, dclprms As String, _
     Optional tmpln As String = "tmpl_Cst_Prms", Optional fromMod As String = "classUtilTmpl")
     Dim arg
     Dim tmpl As String
     Dim prms As String
-    dcl = commentToDcl(dclPrms)
-    asn = commentToDcl(dclPrms, "assign")
+    dcl = expandDcl(dclprms)
+    asn = expandDcl(dclprms, "asn")
     arg = Array(clsn, dcl, asn)
     tmpl = disposeProc("get", fromMod, tmpln)(1)
     mkCstPrmLines = tmplToCode0(tmpl, arg)
@@ -82,27 +60,12 @@ Function tmplToCode0(tmpl As String, args)
     tmplToCode0 = Join(ret, vbCrLf)
 End Function
 
-Sub overRideByTmpl(fnc As String, knd As Long, tmpln As String, toMod As String, fromMod As String)
+Sub overRide(fnc As String, knd As Long, toMod As String, tmpln As String, fromMod As String)
     Dim sLines, cmp
-    tmpl = disposeProc("get", fromMod, tmpln, 0)(1)
-    Set cmp = getComponent(toMod)
-    With cmp.CodeModule
-        lnum = .ProcStartLine(fnc, knd)
-        Call .DeleteLines(lnum, .ProcCountLines(fnc, knd))
-        sCode = tmplToCode(tmpl)
-        Call .InsertLines(lnum, sCode)
-    End With
-End Sub
-
-Sub overRide(fnc As String, knd As Long, toMod As String, fromMod As String)
-    Dim sLines, cmp
-    sLines = disposeProc("get", fromMod, fnc, knd)
-    Set cmp = getComponent(toMod)
-    With cmp.CodeModule
-        lnum = .ProcStartLine(fnc, knd)
-        Call .DeleteLines(lnum, .ProcCountLines(fnc, knd))
-        Call .InsertLines(lnum, Join(sLines, vbCrLf))
-    End With
+    tmpln = Join(Array("ovr", toMod, fnc), "_")
+    tmpl = disposeProc("get", fromMod, tmpln)
+    sCode = tmplToCode(tmpl)
+    Call disposeProc("replace", toMod, fnc, knd, sCode)
 End Sub
 
 Function tmpl_Cst_ParamArray()
@@ -125,4 +88,89 @@ Function tmpl_Cst_Prms()
     ' Set $0 = New $0
     ' call $0.init($2)
     'End Function
+End Function
+
+Function tmpl_init_ParamAry()
+    'Function init(prm)
+    '  Set m_$0 = New Collection
+    '  For Each elm In prm
+    '    Dim x As $1
+    '    Set x = elm
+    '    m_$0.Add x
+    '  Next
+    'End Function
+End Function
+
+Function expandDcl(elms As String, Optional tp = "dcl")
+    prms = Split(elms, ",")
+    n = UBound(prms)
+    ReDim ret(0 To n)
+    For i = 0 To n
+        tmp = Split(prms(i), ";")
+        For j = 0 To UBound(tmp)
+            tmp(j) = Trim(tmp(j))
+        Next
+        Select Case tp
+            Case "asn"
+                ret(i) = tmp(0)
+            Case "dcl"
+                If tmp(1) = "" Then
+                    ret(i) = tmp(0)
+                Else
+                    ret(i) = tmp(0) & " As " & tmp(1)
+                End If
+            Case Else
+        End Select
+    Next i
+    expandDcl = Join(ret, ",")
+End Function
+
+Function dclToAry(dclPrm As String)
+    tmp = Split(dclPrm, ",")
+    ReDim ret(LBound(tmp) To UBound(tmp))
+    For i = LBound(tmp) To UBound(tmp)
+        sLine = tmp(i)
+        stmp = Split(sLine, ";")
+        ret(i) = stmp
+    Next i
+    dclToAry = ret
+End Function
+
+Function mkInitByDclPrms(dclprms As String)
+    dcls = expandDcl(dclprms)
+    asns = expandDcl(dclprms, "asn")
+End Function
+
+Function mkasn(vr)
+    ret = "m_" & vr & " = " & vr & "_"
+    mkasn = ret
+End Function
+
+Function mkdcl(vr, tp, Optional scp = "Private")
+    If scp <> "" Then scp = scp & " "
+    ret = scp & "m_" & vr & " As " & tp
+    mkdcl = ret
+End Function
+
+Function initDcl(dclprms As String)
+    ret = ""
+    tmp = dclToAry(dclprms)
+    For Each elm In tmp
+        ret = ret & vbCrLf & mkdcl(elm(0), elm(1))
+    Next elm
+    ReDim tmp1(LBound(tmp) To UBound(tmp))
+    For i = LBound(tmp) To UBound(tmp)
+        tmp1(i) = tmp(i)(0) & "_ As " & tmp(i)(1)
+    Next
+    ret = ret & vbCrLf & vbCrLf & "Sub init(" & Join(tmp1, ",") & ")"
+    ReDim tmp2(LBound(tmp) To UBound(tmp))
+    For i = LBound(tmp) To UBound(tmp)
+        tmp2(i) = mkasn(tmp(i)(0))
+        If lenAry(tmp(i)) = 3 Then
+            If tmp(i)(2) = "o" Then tmp2(i) = "Set " & tmp2(i)
+        End If
+        tmp2(i) = Space(4) & tmp2(i)
+    Next i
+    ret = ret & vbCrLf & Join(tmp2, vbCrLf) & vbCrLf & "End Sub"
+    initDcl = ret
 End Function

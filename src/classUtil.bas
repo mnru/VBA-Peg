@@ -6,15 +6,18 @@ Function disposeProc(tp, modn, procName, Optional knd = 0, Optional sCode = "")
     Dim cmp
     Dim lineStart, lineDef, lineContent, lineEnd, defcnt, linecnt, i
     Dim xdef, xcnt, xend
+    Dim insertCode
     disposeProc = ""
     tp = LCase(tp)
     If tp = "del" Then sCode = ""
+    If modn = "" Then modn = Application.VBE.SelectedVBComponent.name
     Set cmp = Application.VBE.ActiveVBProject.VBComponents(modn)
     With cmp.CodeModule
         linecnt = .ProcCountLines(procName, knd)
         lineStart = .ProcStartLine(procName, knd)
         lineDef = .ProcBodyLine(procName, knd)
         lineEnd = lineStart + linecnt - 1
+        'determine lineEnd
         For i = 1 To linecnt - 1
             str0 = Trim(.Lines(lineEnd, 1))
             If str0 = "End Function" Or str0 = "End Sub" Or str0 = "End Property" Then
@@ -24,6 +27,7 @@ Function disposeProc(tp, modn, procName, Optional knd = 0, Optional sCode = "")
             End If
         Next i
         defcnt = 0
+        'determine lineContent
         Do While lineDef + defcnt < lineEnd
             strLine = Trim(.Lines(lineDef + defcnt, 1))
             defcnt = defcnt + 1
@@ -32,22 +36,32 @@ Function disposeProc(tp, modn, procName, Optional knd = 0, Optional sCode = "")
             End If
         Loop
         lineContent = lineDef + defcnt
+        'each type dispose start
+        If tp = "del" Then
+            On Error Resume Next
+            Call .DeleteLines(lineStart, lineEnd - linecnt)
+            Exit Function
+        End If
+        'determine xdef,xcnt,xend
+        xdef = .Lines(lineDef, lineContent - lineDef)
+        xcnt = ""
+        If lineEnd > lineContent Then
+            xcnt = .Lines(lineContent, lineEnd - lineContent)
+        End If
+        xend = .Lines(lineEnd, 1)
         If tp = "get" Then
-            xdef = .Lines(lineDef, lineContent - lineDef)
-            xcnt = ""
-            If lineEnd > lineContent Then
-                xcnt = .Lines(lineContent, lineEnd - lineContent)
-            End If
-            xend = .Lines(lineEnd, 1)
             disposeProc = Array(xdef, xcnt, xend)
             Exit Function
         End If
         On Error Resume Next
-        If tp = "del" Or tp = "replace" Then
-            Call .DeleteLines(lineContent, lineEnd - lineContent)
-            If tp = "replace" Then
-                Call .InsertLines(lineContent, sCode)
+        If tp = "replace" Then
+            If sCode = "" Then
+                insertCode = xdef & vbCrLf & xend
+            Else
+                insertCode = xdef & vbCrLf & sCode & vbCrLf & xend
             End If
+            Call .DeleteLines(lineDef, lineEnd - lineDef + 1)
+            Call .InsertLines(lineDef, insertCode)
         End If
         On Error GoTo 0
     End With
@@ -72,34 +86,22 @@ Function getNoOptionLine(modn)
     getNoOptionLine = ret
 End Function
 
-Sub delProc(fnc As String, Optional knd As Long = 0, Optional modn As String = "")
-    'delete procedures in module "modn"
-    If modn = "" Then modn = Application.VBE.SelectedVBComponent.name
-    Set cmp = Application.VBE.ActiveVBProject.VBComponents(modn)
-    With cmp.CodeModule
-        Call .DeleteLines(.ProcStartLine(fnc, knd), .ProcCountLines(fnc, knd))
-    End With
-End Sub
-
 Sub delProcs(Optional modn As String = "", Optional bolPrP = False, Optional bolFnc = False)
     'delete procedures in module "modn"
     If modn = "" Then modn = Application.VBE.SelectedVBComponent.name
-    Set cmp = Application.VBE.ActiveVBProject.VBComponents(modn)
     fncs = getModProcDics(modn)
-    With cmp.CodeModule
-        If bolFnc Then
-            For Each fnc In fncs(0).keys
-                Call .DeleteLines(.ProcStartLine(fnc, 0), .ProcCountLines(fnc, 0))
-            Next fnc
-        End If
-        If bolPrP Then
-            For Each prp In fncs(1).keys
-                For Each knd In fncs(1)(prp)
-                    Call .DeleteLines(.ProcStartLine(prp, knd), .ProcCountLines(prp, knd))
-                Next knd
-            Next prp
-        End If
-    End With
+    If bolFnc Then
+        For Each fnc In fncs(0).keys
+            Call disposeProc("del", modn, fnc, 0)
+        Next fnc
+    End If
+    If bolPrP Then
+        For Each prp In fncs(1).keys
+            For Each knd In fncs(1)(prp)
+                Call disposeProc("del", modn, fnc, knd)
+            Next knd
+        Next prp
+    End If
 End Sub
 
 Function typeNum(tp As String)

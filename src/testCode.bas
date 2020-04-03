@@ -78,7 +78,7 @@ End Sub
 Sub testTmpl()
     Dim arg
     Dim tmpl As String
-    Dim dclPrms As String
+    Dim dclprms As String
     Dim prms As String
     fromMod = "classUtilTmpl"
     tmpln = "tmpl_cst_prms"
