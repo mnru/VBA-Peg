@@ -169,7 +169,7 @@ Function initDcl(dclprms As String)
         If lenAry(tmp(i)) = 3 Then
             If tmp(i)(2) = "o" Then tmp2(i) = "Set " & tmp2(i)
         End If
-        tmp2(i) = Space(4) & tmp2(i)
+        tmp2(i) = space(4) & tmp2(i)
     Next i
     ret = ret & vbCrLf & Join(tmp2, vbCrLf) & vbCrLf & "End Sub"
     initDcl = ret

@@ -161,7 +161,7 @@ Function getModProcDics(modn As String)
                     If procLineNum <> 0 Then
                         Call fncDic.Add(procName, 0)
                     Else
-                        If Not prpDic.Exists(procName) Then
+                        If Not prpDic.exists(procName) Then
                             Call prpDic.Add(procName, New Collection)
                             For knd = 1 To 3
                                 procLineNum = tryToGetProcLineNum(cmp, procName, knd)
@@ -184,38 +184,6 @@ Private Function tryToGetProcLineNum(cmp, procName, Optional knd = 0)
     ret = 0
     ret = cmp.CodeModule.ProcCountLines(procName, knd)
     tryToGetProcLineNum = ret
-End Function
-
-Function lenAry(ary)
-    lenAry = UBound(ary) - LBound(ary) + 1
-End Function
-
-Function conArys(ParamArray argArys())
-    Dim num As Long, i As Long
-    Dim arys, ret, elm, ary
-    arys = argArys
-    num = 0
-    For Each ary In arys
-        If IsArray(ary) Then
-            num = num + lenAry(ary)
-        Else
-            num = num + 1
-        End If
-    Next ary
-    ReDim ret(0 To num - 1)
-    i = 0
-    For Each ary In arys
-        If IsArray(ary) Then
-            For Each elm In ary
-                ret(i) = elm
-                i = i + 1
-            Next elm
-        Else
-            ret(i) = ary
-            i = i + 1
-        End If
-    Next ary
-    conArys = ret
 End Function
 
 Function defaultInterfaceName(clsn As String)
