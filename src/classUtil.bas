@@ -333,16 +333,20 @@ Sub mkInterFace(ifcn As String, impln As String, ParamArray ArgClsns())
     Call mkPrp(ifcn, impln, True, False)
 End Sub
 
-Sub mkSubClass(ifcn As String, impln As String, sclsns)
+Sub mkSubClass(sclsn As String, ifcn As String, impln As String)
     If ifcn = "" Then ifcn = defaultInterfaceName(CStr(impln))
     Set cmps = Application.VBE.SelectedVBComponent
+    Set tCmp = mkComponent(CStr(sclsn), "cls")
+    Call cpCode(impln, sclsn, "all")
+    With tCmp.CodeModule
+        sLine = "implements " & ifcn
+        Call .InsertLines(1, sLine)
+    End With
+End Sub
+
+Sub mkSubClasses(sclsns, ifcn As String, impln As String)
     For Each sclsn In sclsns
-        Set tCmp = mkComponent(CStr(sclsn), "cls")
-        Call cpCode(impln, sclsn, "all")
-        With tCmp.CodeModule
-            sLine = "implements " & ifcn
-            Call .InsertLines(1, sLine)
-        End With
+        Call mkSubClass(CStr(sclsn), ifcn, impln)
     Next sclsn
 End Sub
 

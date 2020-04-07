@@ -91,12 +91,12 @@ Sub testPart()
 End Sub
 
 Sub testInit()
-    x = initDcl("inputs;String, pos;Long;_, nodes;;o")
+    x = dclPrmToInit("inputs;String, pos;Long;_, nodes;;o")
     Debug.Print x
 End Sub
 
 Sub testTmpl1()
-    str0 = mkCstPrmLines("ParseState", "inputs;String, pos;Long, nodes")
+    str0 = dclPrmToCst("ParseState", "inputs;String, pos;Long, nodes")
     Debug.Print str0
 End Sub
 

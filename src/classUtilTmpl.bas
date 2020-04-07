@@ -14,7 +14,7 @@ Sub mkCst(toMod As String, tmpln As String, fromMod As String, clsns)
     End With
 End Sub
 
-Sub mkCstPrm(toMod As String, clsn As String, dclPrms As String, _
+Sub mkCstPrm(clsn As String, toMod As String, dclPrms As String, _
     Optional tmpln As String = "tmpl_Cst_Prms", Optional fromMod As String = "classUtilTmpl")
     Dim sLines As String
     Dim cmp
