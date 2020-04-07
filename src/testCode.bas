@@ -37,6 +37,21 @@ End Function
 Sub testcode4()
     Call mkSubClass("SpecialLogWriter", , "LogWriter")
 End Sub
+'//SubClass
+'Private m_inputs As String
+'Private m_ pos As Long
+'Private m_ nodes As Collection
+'
+'Sub init(inputs_ As String, pos_ As Long, nodes_ As Collection)
+'  m_inputs = inputs_
+'  m_ pos = pos_
+'  m_ nodes = nodes_
+'End Sub
+'//Constructor
+'Function Node(a As String, b As Long) As Node
+' Set Node = New Node
+' Call Node.init(a, b)
+'End Function
 
 Sub testprp()
     Debug.Print mkPrpStatement("abc", "Long", "g")(1)
@@ -63,7 +78,7 @@ Sub testprp()
     Debug.Print mkPrpStatement("abc", "", "i_")(1)
 End Sub
 
-Sub testDel()
+Sub testDcl()
     clsns = Array("classGenerator", "classUtil", "G", "iParser_Impl")
     Call delComponent("N0_")
     Call delComponentExcept(clsns)
@@ -75,23 +90,9 @@ Sub testPart()
     Stop
 End Sub
 
-Sub testTmpl()
-    Dim arg
-    Dim tmpl As String
-    Dim dclprms As String
-    Dim prms As String
-    fromMod = "classUtilTmpl"
-    tmpln = "tmpl_cst_prms"
-    prms = "a;string,b;long"
-    dcl = commentToDcl(prms)
-    asn = commentToDcl(prms, "assign")
-    arg = Array("Node", dcl, asn)
-    '   Set cmp = mkComponent(toMod, "std")
-    '    With cmp.CodeModule
-    tmpl = disposeProc("get", fromMod, tmpln)(1)
-    ret = tmplToCode0(tmpl, arg)
-    Debug.Print ret
-    '   End With
+Sub testInit()
+    x = initDcl("inputs;String, pos;Long;_, nodes;;o")
+    Debug.Print x
 End Sub
 
 Sub testTmpl1()
@@ -109,4 +110,34 @@ End Sub
 Sub testOverride()
     Call overRide("testcode2", 0, "testCode", "classUtil")
     Call overRide("testcode3", 0, "testCode", "classUtil")
+End Sub
+
+Sub testTmpl()
+    Dim arg
+    Dim tmpl As String
+    Dim dclPrms As String
+    Dim prms As String
+    fromMod = "classUtilTmpl"
+    tmpln = "tmpl_cst_prms"
+    prms = "a;string,b;long"
+    dcl = expandDcl(prms, "dcl", "", "", "")
+    asn = expandDcl(prms, "asn")
+    arg = Array("Node", dcl, asn)
+    '  Set cmp = mkComponent(toMod, "std")
+    '  With cmp.CodeModule
+    tmpl = disposeProc("get", fromMod, tmpln)(1)
+    ret = tmplToCode0(tmpl, arg)
+    Debug.Print ret
+    '  End With
+End Sub
+
+Sub testdclprm()
+    Dim dclprm As String
+    dclprm = "inputs;String, pos;Long, nodes"
+    Debug.Print "//dclPrmToDcl"
+    Debug.Print dclPrmToDcl(dclprm)
+    Debug.Print "//dclPrmToInit"
+    Debug.Print dclPrmToInit(dclprm)
+    Debug.Print "//dclPrmToCst"
+    Debug.Print dclPrmToCst("Node", dclprm)
 End Sub

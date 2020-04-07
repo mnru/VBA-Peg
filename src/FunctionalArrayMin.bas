@@ -1,11 +1,10 @@
 Attribute VB_Name = "FunctionalArrayMin"
-
 Option Base 0
 Option Explicit
-
 ''''''''''''''''''''
 ' enum
 ''''''''''''''''''''
+
 Enum Direction
     faDirect = 1
     faReverse = -1
@@ -27,11 +26,10 @@ Enum rowColumn
     faRow = 1
     faColumn = 2
 End Enum
-
-
 ''''''''''''''''''''
 'from modAry
 ''''''''''''''''''''
+
 Function lenAry(ary As Variant, Optional dm = 1) As Long
     lenAry = UBound(ary, dm) - LBound(ary, dm) + 1
 End Function
@@ -56,7 +54,6 @@ Sub setAryAt(ByRef ary As Variant, pos As Long, vl As Variant, Optional base As 
     End If
     assign_ ary(idx), vl
 End Sub
-
 
 Public Function dimAry(ByVal ary As Variant) As Long
     On Error GoTo Catch
@@ -304,11 +301,10 @@ Sub assign_(ByRef Variable As Variant, ByVal Value As Variant)
         Variable = Value
     End If
 End Sub
-
-
 ''''''''''''''''''''
 'from modFnc
 ''''''''''''''''''''
+
 Public Function evalA(argAry As Variant) As Variant
     Dim lb As Long
     Dim ary
@@ -352,32 +348,31 @@ Public Function evalA(argAry As Variant) As Variant
     evalA = ret
 End Function
 
-Public Function mapA(fnc As String, seq As Variant, ParamArray argAry() As Variant) As Variant
+Public Function mapA(fnc As String, Seq As Variant, ParamArray argAry() As Variant) As Variant
     Dim ary, fnAry
     Dim lNum As Long
     ary = argAry
     fnAry = prmAry(fnc, Empty, ary)
-    lNum = lenAry(seq)
+    lNum = lenAry(Seq)
     ReDim ret(1 To lNum)
     Dim i As Long
     For i = 1 To lNum
-        Call setAryAt(fnAry, 2, getAryAt(seq, i))
+        Call setAryAt(fnAry, 2, getAryAt(Seq, i))
         ret(i) = evalA(fnAry)
     Next i
     mapA = ret
 End Function
 
-
-Public Function filterA(fnc As String, seq As Variant, affirmative As Boolean, ParamArray argAry() As Variant) As Variant
+Public Function filterA(fnc As String, Seq As Variant, affirmative As Boolean, ParamArray argAry() As Variant) As Variant
     Dim lNum As Long, i As Long
     Dim ary, fnAry, elm
     Dim bol As Boolean
     ary = argAry
-    lNum = lenAry(seq)
+    lNum = lenAry(Seq)
     fnAry = prmAry(fnc, Empty, ary)
     i = 0
     ReDim ret(1 To lNum)
-    For Each elm In seq
+    For Each elm In Seq
         Call setAryAt(fnAry, 2, elm)
         bol = evalA(fnAry)
         If Not affirmative Then bol = Not bol
@@ -390,20 +385,20 @@ Public Function filterA(fnc As String, seq As Variant, affirmative As Boolean, P
     filterA = ret
 End Function
 
-Public Function foldA(fnc As String, seq As Variant, init As Variant, ParamArray argAry() As Variant) As Variant
+Public Function foldA(fnc As String, Seq As Variant, init As Variant, ParamArray argAry() As Variant) As Variant
     Dim ary, ret
     ary = argAry
-    ret = foldAryA(fnc, seq, init, ary)
+    ret = foldAryA(fnc, Seq, init, ary)
     foldA = ret
 End Function
 
-Private Function foldAryA(fnc As String, seq As Variant, init As Variant, ary) As Variant
+Private Function foldAryA(fnc As String, Seq As Variant, init As Variant, ary) As Variant
     Dim fnAry, elm, ret
     Dim n As Long
     fnAry = prmAry(fnc, init, Empty, ary)
-    n = lenAry(seq)
+    n = lenAry(Seq)
     ret = init
-    For Each elm In seq
+    For Each elm In Seq
         Call setAryAt(fnAry, 1, ret, 0)
         Call setAryAt(fnAry, 2, elm, 0)
         ret = evalA(fnAry)
@@ -411,11 +406,11 @@ Private Function foldAryA(fnc As String, seq As Variant, init As Variant, ary) A
     foldAryA = ret
 End Function
 
-Public Function reduceA(fnc As String, seq As Variant, ParamArray argAry() As Variant) As Variant
+Public Function reduceA(fnc As String, Seq As Variant, ParamArray argAry() As Variant) As Variant
     Dim ary, seq1, ret, init
     ary = argAry
-    init = getAryAt(seq, 1)
-    seq1 = dropAry(seq, 1)
+    init = getAryAt(Seq, 1)
+    seq1 = dropAry(Seq, 1)
     ret = foldAryA(fnc, seq1, init, ary)
     reduceA = ret
 End Function
@@ -461,4 +456,3 @@ Function dropWhile(fnc As String, ary, dir As Direction, ParamArray argAry())
     ret = dropAry(ary, num, dir)
     dropWhile = ret
 End Function
-

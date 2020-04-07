@@ -3,7 +3,7 @@ Private m_name As String 'i_,g,l
 Private m_Parsers As Collection 'is,igo_,go,s_
 
 Function and_(parser As iParser) As iParser
-    Set and_ = seq(Me, parser)
+    Set and_ = Seq(Me, parser)
 End Function
 
 Function or_(parser As iParser) As iParser
@@ -32,13 +32,4 @@ Function match(somthing)
         Set state = internalMatch(something)
     End If
     Set match = state
-End Function
-
-Function init(prm)
-    Set m_Parsers = New Collection
-    For Each elm In prm
-        Dim x As iParser
-        Set x = elm
-        m_Parsers.Add x
-    Next
 End Function
