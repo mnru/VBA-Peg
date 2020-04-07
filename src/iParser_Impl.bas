@@ -3,7 +3,7 @@ Private m_name As String 'i_,g,l
 Private m_Parsers As Collection 'is,igo_,go,s_
 
 Function and_(parser As iParser) As iParser
-    Set and_ = Seq(Me, parser)
+    Set and_ = seq(Me, parser)
 End Function
 
 Function or_(parser As iParser) As iParser
