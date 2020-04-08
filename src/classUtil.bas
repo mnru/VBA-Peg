@@ -333,41 +333,12 @@ Sub mkInterFace(ifcn As String, impln As String, ParamArray ArgClsns())
     Call mkPrp(ifcn, impln, True, False)
 End Sub
 
-Sub mkSubClass(sclsn As String, ifcn As String, impln As String)
-    If ifcn = "" Then ifcn = defaultInterfaceName(CStr(impln))
+Sub mkSubClass(sclsn As String, impln As String, Optional ifcn As String = "")
     Set cmps = Application.VBE.SelectedVBComponent
     Set tCmp = mkComponent(CStr(sclsn), "cls")
     Call cpCode(impln, sclsn, "all")
     With tCmp.CodeModule
-        sLine = "implements " & ifcn
+        If ifcn <> "" Then sLine = "implements " & ifcn
         Call .InsertLines(1, sLine)
     End With
 End Sub
-
-Sub mkSubClasses(sclsns, ifcn As String, impln As String)
-    For Each sclsn In sclsns
-        Call mkSubClass(CStr(sclsn), ifcn, impln)
-    Next sclsn
-End Sub
-
-Function testcode2(src As String, prms)
-    Dim tmp
-    Dim arg
-    Dim n, i, j
-    arg = prms
-    tmp = Split(src, vbCrLf)
-    ReDim ret(LBound(tmp) To UBound(tmp))
-    For i = LBound(tmp) To UBound(tmp)
-        sLine = Trim(tmp(i))
-        If Len(sLine) > 0 And Left(sLine, 1) = "'" Then sLine = Right(sLine, Len(sLine) - 1)
-        For j = 0 To UBound(arg)
-            v = "$" & j
-            sLine = Replace(sLine, v, arg(j))
-        Next j
-        tmp(i) = sLine
-    Next i
-    tmplToCode0 = Join(tmp, vbCrLf)
-End Function
-
-Function testcode3(src As String, prms)
-End Function

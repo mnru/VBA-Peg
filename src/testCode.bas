@@ -28,7 +28,7 @@ Function testcode2(src As String, prms)
         Next j
         tmp(i) = sLine
     Next i
-    writePrmsToTmpl = Join(tmp, vbCrLf)
+    tmplToCode = Join(tmp, vbCrLf)
 End Function
 
 Function testcode3(src As String, prms)
@@ -43,9 +43,9 @@ End Sub
 'Private m_ nodes As Collection
 '
 'Sub init(inputs_ As String, pos_ As Long, nodes_ As Collection)
-'  m_inputs = inputs_
-'  m_ pos = pos_
-'  m_ nodes = nodes_
+' m_inputs = inputs_
+' m_ pos = pos_
+' m_ nodes = nodes_
 'End Sub
 '//Constructor
 'Function Node(a As String, b As Long) As Node
@@ -112,32 +112,13 @@ Sub testOverride()
     Call overRide("testcode3", 0, "testCode", "classUtil")
 End Sub
 
-Sub testTmpl()
-    Dim arg
-    Dim tmpl As String
-    Dim dclPrms As String
-    Dim prms As String
-    fromMod = "classUtilTmpl"
-    tmpln = "tmpl_cst_prms"
-    prms = "a;string,b;long"
-    dcl = expandDcl(prms, "dcl", "", "", "")
-    asn = expandDcl(prms, "asn")
-    arg = Array("Node", dcl, asn)
-    '  Set cmp = mkComponent(toMod, "std")
-    '  With cmp.CodeModule
-    tmpl = disposeProc("get", fromMod, tmpln)(1)
-    ret = tmplToCode0(tmpl, arg)
-    Debug.Print ret
-    '  End With
-End Sub
-
 Sub testdclprm()
-    Dim dclprm As String
-    dclprm = "inputs;String, pos;Long, nodes"
+    Dim dclPrm As String
+    dclPrm = "inputs;String, pos;Long, nodes"
     Debug.Print "//dclPrmToDcl"
-    Debug.Print dclPrmToDcl(dclprm)
+    Debug.Print dclPrmToDcl(dclPrm)
     Debug.Print "//dclPrmToInit"
-    Debug.Print dclPrmToInit(dclprm)
+    Debug.Print dclPrmToInit(dclPrm)
     Debug.Print "//dclPrmToCst"
-    Debug.Print dclPrmToCst("Node", dclprm)
+    Debug.Print dclPrmToCst("Node", dclPrm)
 End Sub

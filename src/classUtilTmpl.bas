@@ -1,36 +1,56 @@
 Attribute VB_Name = "classUtilTmpl"
-Sub mkCst(toMod As String, tmpln As String, fromMod As String, clsns)
-    Dim arg
+Sub mkCstPAry(clsn As String, toMod As String, tmpln As String, fromMod As String)
     Dim tmpl As String
     Dim sLines As String
-    arg = clsns
-    Set cmp = mkComponent(toMod, "std")
-    With cmp.CodeModule
-        tmpl = disposeProc("get", fromMod, tmpln)(1)
-        For i = UBound(arg) To LBound(arg) Step -1
-            sLines = tmplToCode(tmpl, CStr(arg(i)))
-            .AddFromString (vbCrLf & sLines)
-        Next i
-    End With
+    sLines = tmplnToCode(tmpln, fromMod, clsn)
+    Call writeToComponent(toMod, vbCrLf & sLines)
 End Sub
 
-Sub mkCstPrm(clsn As String, toMod As String, dclPrms As String, _
+Sub addInitByPAry(clsn As String, tmpln As String, fromMod As String, clcn As String)
+    Dim sLines As String
+    sLines = tmplnToCode(tmpln, fromMod, clcn, clsn)
+    Call writeToComponent(clsn, vbCrLf & sLines)
+End Sub
+
+Sub mkCstInitByPAry(clsn As String, toMod As String, _
+    Optional impln As String = "", Optional itfn As String = "", Optional clcn As String = "Parsers", _
+    Optional cstn As String = "tmpl_Cst_PAry", Optional initn As String = "tmpl_Init_PAry", Optional fromMod As String = "classUtilTmpl")
+    Call mkCstPAry(clsn, toMod, cstn, fromMod)
+    If impln = "" Then
+        Call mkComponent(clsn, "cls")
+    Else
+        Call mkSubClass(clsn, impln, itfn)
+    End If
+    Call addInitByPAry(clsn, initn, fromMod, clcn)
+End Sub
+
+Sub mkCstPrm(clsn As String, toMod As String, dclPrm As String, _
     Optional tmpln As String = "tmpl_Cst_Prms", Optional fromMod As String = "classUtilTmpl")
     Dim sLines As String
-    Dim cmp
-    sLines = dclPrmToCst(clsn, dclPrms, tmpln, fromMod)
-    Set cmp = mkComponent(toMod, "std")
-    With cmp.CodeModule
-        .AddFromString (vbCrLf & sLines)
-    End With
+    sLines = dclPrmToCst(clsn, dclPrm, tmpln, fromMod)
+    Call writeToComponent(toMod, vbCrLf & sLines)
 End Sub
 
-Function tmplToCode(tmpl As String, ParamArray prms())
+Sub mkCstInitByDclPrm(clsn As String, toMod As String, dclPrm As String, _
+    Optional impln As String = "", Optional itfn As String = "", _
+    Optional tmpln As String = "tmpl_Cst_Prms", Optional fromMod As String = "classUtilTmpl")
+    Call mkCstPrm(clsn, toMod, dclPrm)
+    If impln = "" Then
+        Call mkComponent(clsn, "cls")
+    Else
+        Call mkSubClass(clsn, impln, itfn)
+    End If
+    Call addInitByDclPrm(clsn, dclPrm)
+End Sub
+
+Function tmplnToCode(tmpln As String, modn As String, ParamArray prms())
+    Dim tmpl As String
     args = prms
-    tmplToCode = tmplToCode0(tmpl, args)
+    tmpl = disposeProc("get", modn, tmpln, 0)(1)
+    tmplnToCode = tmplToCode(tmpl, args)
 End Function
 
-Function tmplToCode0(tmpl As String, args)
+Function tmplToCode(tmpl As String, args)
     Dim ret, sLine
     Dim i As Long, j As Long
     ret = Split(tmpl, vbCrLf)
@@ -42,43 +62,43 @@ Function tmplToCode0(tmpl As String, args)
         Next j
         ret(i) = sLine
     Next i
-    tmplToCode0 = Join(ret, vbCrLf)
+    tmplToCode = Join(ret, vbCrLf)
 End Function
 
-Function dclPrmToCst(clsn As String, dclPrms As String, _
+Function dclPrmToCst(clsn As String, dclPrm As String, _
     Optional tmpln As String = "tmpl_Cst_Prms", Optional fromMod As String = "classUtilTmpl")
     Dim arg
     Dim tmpl As String
     Dim prms As String
-    tmp = dclPrmToAry(dclPrms)
+    tmp = dclPrmToAry(dclPrm)
     arg1 = Join(mapA("mkDcl", tmp, "", "", ""), ",")
     arg2 = Join(mapA("getAryAt", tmp, 1), ",")
     arg = Array(clsn, arg1, arg2)
     tmpl = disposeProc("get", fromMod, tmpln)(1)
-    dclPrmToCst = tmplToCode0(tmpl, arg)
+    dclPrmToCst = tmplToCode(tmpl, arg)
 End Function
 
-Function dclPrmToDcl(dclPrms As String)
+Function dclPrmToDcl(dclPrm As String)
     Dim ret
-    tmp = dclPrmToAry(dclPrms)
+    tmp = dclPrmToAry(dclPrm)
     tmp0 = mapA("mkdcl", tmp, "auto", "m_", "")
     ret = Join(tmp0, vbCrLf) & vbCrLf & vbCrLf
     dclPrmToDcl = ret
 End Function
 
-Function dclPrmToInit(dclPrms As String) As String
+Function dclPrmToInit(dclPrm As String) As String
     Dim ret As String
-    tmp = dclPrmToAry(dclPrms)
+    tmp = dclPrmToAry(dclPrm)
     tmp1 = mapA("mkdcl", tmp, "", "", "_")
     tmp2 = mapA("mkasn", tmp)
-    tmp3 = mapA("addstr", tmp2, "  ")
+    tmp3 = mapA("addstr", tmp2, " ")
     ret = "Sub init(" & Join(tmp1, ",") & ")" & vbCrLf & Join(tmp3, vbCrLf) & vbCrLf & "End Sub"
     dclPrmToInit = ret
 End Function
 
-Sub addInitByDclPrm(clsn As String, dclprm As String)
-    str1 = dclPrmToDcl(dclprm)
-    str2 = dclPrmToInit(dclprm)
+Sub addInitByDclPrm(clsn As String, dclPrm As String)
+    str1 = dclPrmToDcl(dclPrm)
+    str2 = dclPrmToInit(dclPrm)
     Set cmp = getComponent(clsn)
     With cmp.CodeModule
         .AddFromString (str1 & vbCrLf & str2)
@@ -86,25 +106,17 @@ Sub addInitByDclPrm(clsn As String, dclprm As String)
 End Sub
 
 Sub overRide(fnc As String, knd As Long, toMod As String, tmpln As String, fromMod As String)
-    Dim sLines, cmp
+    Dim tmpln As String
     tmpln = Join(Array("ovr", toMod, fnc), "_")
-    tmpl = disposeProc("get", fromMod, tmpln)
-    sCode = tmplToCode(tmpl)
+    sCode = tmplnToCode(tmpln, fromMod)
     Call disposeProc("replace", toMod, fnc, knd, sCode)
 End Sub
 
-Function tmpl_Cst_ParamArray()
+Function tmpl_Cst_PAry()
     'Function $0(ParamArray arg()) As $0
     ' Set $0 = New $0
     ' prm = arg
     ' $0.init (prm)
-    'End Function
-End Function
-
-Function tmpl_Cst_String()
-    'Function $0(str As String) As $0
-    ' Set $0 = New $0
-    ' $0.init (str)
     'End Function
 End Function
 
@@ -115,19 +127,25 @@ Function tmpl_Cst_Prms()
     'End Function
 End Function
 
-Function tmpl_init_ParamAry()
-    'Function init(prm)
+Function tmpl_init_PAry()
+    'Sub init(prm)
     ' Set m_$0 = New Collection
     ' For Each elm In prm
-    '  Dim x As $1
-    '  Set x = elm
-    '  m_$0.Add x
+    ' Dim x As $1
+    ' Set x = elm
+    ' m_$0.Add x
     ' Next
-    'End Function
+    'End Sub
 End Function
 
-Function dclPrmToAry(dclprm As String)
-    tmp = Split(dclprm, ",")
+Function tmpl_init_Prm()
+    'Sub init($0)
+    '$1
+    'End Sub
+End Function
+
+Function dclPrmToAry(dclPrm As String)
+    tmp = Split(dclPrm, ",")
     ret = mapA("mcsplit", tmp, ";")
     For i = LBound(ret) To UBound(ret)
         ret(i) = mapA("mcTrim", ret(i))

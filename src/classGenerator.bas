@@ -10,15 +10,8 @@ Sub genrateConstructor()
     clsns1 = Array("Seq", "Choice", "Rep0or1", "Rep0orMore", "Rep1orMore", "T", "F")
     clsns2 = Array("Token", "Char", "RegEx")
     Call mkInterFace("iParser", "iParser_impl")
-    Call mkSubClasses(clsns1, "iParser", "iParser_impl")
-    Call mkCst("G", "tmpl_Cst_ParamArray", tmplmod, clsns1)
-    Dim dclprm2 As String
-    dclprm2 = "str;String"
-    For Each clsn In clsns2
-        Call mkSubClass(CStr(clsn), "iParser", "iParser_impl")
-        Call mkCstPrm(CStr(clsn), "G", dclprm2)
-        Call addInitByDclPrm(CStr(clsn), dclprm2)
-    Next
+    Call mapA("mkCstInitByPAry", clsns1, "G", "iParser_impl", "iParser", "Parsers")
+    Call mapA("mkCstInitByDclPrm", clsns2, "G", "str;String", "iParser_impl", "iParser")
     Call mkCstPrm("ParseState", "G", "inputs;String, pos;Long,nodes;")
     Call mkCstPrm("Node", "G", "begin;long,label;String,inputs;String")
 End Sub

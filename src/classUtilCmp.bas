@@ -68,3 +68,20 @@ Sub printComponents()
         Debug.Print cmp.name
     Next cmp
 End Sub
+
+Sub writeToComponent(modn As String, str As String, Optional pos As String = "c", Optional modtp As String = "std")
+    'pos c:center,t:top,b:bottom
+    Set cmp = mkComponent(modn, modtp)
+    With cmp.CodeModule
+        Select Case LCase(pos)
+            Case "c" 'center
+                .AddFromString (str)
+            Case "t" 'top
+                Call .InsertLines(1, str)
+            Case "b" 'bottom
+                str0 = .Lines(.CountOfLines, 1)
+                Call .ReplaceLine(.CountOfLines, str0 & vbCrLf & str)
+            Case Else
+        End Select
+    End With
+End Sub
